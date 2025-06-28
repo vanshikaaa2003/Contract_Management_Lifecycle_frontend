@@ -1,0 +1,118 @@
+/* Leverage Bootstrap's alert styles for modals */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1050;
+  overflow: auto;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Modal content styled as a Bootstrap alert */
+.modal-content {
+  margin: 10% auto;
+  padding: 1.25rem;
+  border-radius: 0.3rem;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 500px;
+  border: none;
+  position: relative;
+}
+
+/* Apply Bootstrap alert classes to modals */
+.confirm-publish .modal-content {
+  background-color: var(--bs-alert-bg, var(--bs-success-bg-subtle));
+  border-left: 4px solid var(--bs-success);
+  color: var(--bs-success-text-emphasis);
+}
+
+.confirm-discard .modal-content {
+  background-color: var(--bs-alert-bg, var(--bs-danger-bg-subtle));
+  border-left: 4px solid var(--bs-danger);
+  color: var(--bs-danger-text-emphasis);
+}
+
+.add-new-account .modal-content,
+.edit-account .modal-content,
+.add-new-contact .modal-content,
+.edit-contact .modal-content,
+.contacts-for-account .modal-content {
+  background-color: var(--bs-alert-bg, var(--bs-primary-bg-subtle));
+  border-left: 4px solid var(--bs-primary);
+  color: var(--bs-primary-text-emphasis);
+}
+
+/* Modal header styled like alert heading */
+.modal-header {
+  font-size: 1.25rem;
+  font-weight: 500;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--bs-alert-hr, #e9ecef);
+  margin-bottom: 0.75rem;
+}
+
+/* Use Bootstrap's btn-close for dismissible alerts */
+.btn-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: var(--bs-alert-close-icon);
+  filter: none;
+  mask-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000'%3e%3cpath d='M.293.293a1 1 0 011.414 0L8 6.586 14.293.293a1 1 0 111.414 1.414L9.414 8l6.293 6.293a1 1 0 01-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 01-1.414-1.414L6.586 8 .293 1.707A1 1 0 01.293.293z'/%3e%3c/svg%3e");
+  mask-repeat: no-repeat;
+  mask-size: 100% 100%;
+}
+
+/* Modal body */
+.modal-body {
+  font-size: 1rem;
+  line-height: 1.5;
+  padding: 0.75rem 0;
+}
+
+/* Modal footer for buttons */
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--bs-alert-hr, #e9ecef);
+}
+
+/* Enhance Bootstrap buttons */
+.btn {
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Animation for modal appearance */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .modal-content {
+    width: 95%;
+    padding: 1rem;
+  }
+  .modal-header {
+    font-size: 1.1rem;
+  }
+  .btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+  }
+}

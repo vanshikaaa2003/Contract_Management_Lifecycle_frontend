@@ -1,0 +1,9 @@
+# Ignore OS + editor cruft
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Built assets (we don't have any yet, but future‑proof)
+dist/
+build/
+node_modules/

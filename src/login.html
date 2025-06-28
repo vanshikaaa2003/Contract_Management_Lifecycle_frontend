@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en" class="light-style" dir="ltr" data-theme="theme-default" data-assets-path="vuexy-bootstrap-html-admin-template/full-version/dist/" data-template="vertical-menu-template">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - AccordWise</title>
+    <!-- Core CSS (Bootstrap 5 + Vuexy Styles) -->
+    <link rel="stylesheet" href="vuexy-bootstrap-html-admin-template/full-version/dist/css/core.css">
+    <!-- Vendors CSS -->
+    <link rel="stylesheet" href="vuexy-bootstrap-html-admin-template/full-version/dist/libs/perfect-scrollbar/perfect-scrollbar.css">
+    <link rel="stylesheet" href="vuexy-bootstrap-html-admin-template/full-version/dist/libs/node-waves/node-waves.css">
+    <!-- Page CSS for Authentication -->
+    <link rel="stylesheet" href="vuexy-bootstrap-html-admin-template/full-version/dist/css/pages/page-auth.css">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="vuexy-bootstrap-html-admin-template/full-version/dist/fonts/fontawesome.css">
+    <!-- Helpers -->
+    <link rel="stylesheet" href="vuexy-bootstrap-html-admin-template/full-version/dist/css/rtl.css">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/dist/umd/supabase.min.js" onload="supabaseLoaded = true"></script>
+</head>
+<body>
+    <!-- Authentication Wrapper -->
+    <div class="authentication-wrapper authentication-basic container-p-y">
+        <div class="authentication-inner py-4">
+            <!-- Login Card -->
+            <div class="card">
+                <div class="card-body">
+                    <!-- Logo -->
+                    <div class="app-brand justify-content-center mb-4">
+                        <a href="#" class="app-brand-link gap-2">
+                            <span class="app-brand-text demo text-heading fw-bold">AccordWise</span>
+                        </a>
+                    </div>
+                    <!-- Form -->
+                    <h4 class="mb-2">Welcome to AccordWise! 👋</h4>
+                    <p class="mb-4">Please sign in to your account</p>
+                    <form id="loginForm" class="mb-3">
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username" required autofocus>
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary d-grid w-100 waves-effect waves-light">Login</button>
+                    </form>
+                    <p class="text-center">
+                        <a href="#" id="forgotPasswordLink" class="text-primary">Forgot Password?</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="forgotPasswordModalLabel">Reset Password</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Enter your email to receive a password reset link.</p>
+                    <form id="forgotPasswordForm">
+                        <div class="mb-3">
+                            <label for="resetEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="resetEmail" name="resetEmail" placeholder="Enter your email" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary d-grid w-100 waves-effect waves-light">Send Reset Link</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core JS Files -->
+    <script src="vuexy-bootstrap-html-admin-template/full-version/dist/libs/popper/popper.js"></script>
+    <script src="vuexy-bootstrap-html-admin-template/full-version/dist/js/bootstrap.js"></script>
+    <script src="vuexy-bootstrap-html-admin-template/full-version/dist/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+    <script src="vuexy-bootstrap-html-admin-template/full-version/dist/libs/hammer/hammer.js"></script>
+    <script src="vuexy-bootstrap-html-admin-template/full-version/dist/libs/i18n/i18n.js"></script>
+    <script src="vuexy-bootstrap-html-admin-template/full-version/dist/libs/typeahead/typeahead.js"></script>
+    <script src="vuexy-bootstrap-html-admin-template/full-version/dist/js/menu.js"></script>
+    <script src="vuexy-bootstrap-html-admin-template/full-version/dist/libs/node-waves/node-waves.js"></script>
+    <!-- Main JS -->
+    <script src="vuexy-bootstrap-html-admin-template/full-version/dist/js/main.js"></script>
+    <!-- Custom Script -->
+    <script>
+        let supabaseLoaded = false;
+
+        function waitForSupabase() {
+            if (typeof supabase !== 'undefined') {
+                initializeApp();
+            } else if (!supabaseLoaded) {
+                console.log('Waiting for Supabase library to load...');
+                setTimeout(waitForSupabase, 100);
+            } else {
+                console.error('Supabase library failed to load.');
+                alert('Error: Could not load the Supabase library.');
+            }
+        }
+
+        function initializeApp() {
+            const supabaseUrl = '***REMOVED***';
+            const supabaseKey = '***REMOVED***';
+            const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+            // Login Form Submission
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+
+                    const username = document.getElementById('username').value.trim();
+                    const password = document.getElementById('password').value;
+
+                    try {
+                        let { data: adminData, error: adminError } = await supabaseClient
+                            .from('admins')
+                            .select('*')
+                            .eq('username', username)
+                            .single();
+
+                        if (adminData && !adminError && adminData.password === password) {
+                            localStorage.setItem('loggedInAdminUsername', username);
+                            localStorage.setItem('loggedInRole', 'byteadmin');
+                            alert('Login successful!');
+                            window.location.href = 'dashboardbytewiseadmin.html';
+                            return;
+                        }
+
+                        let { data: orgAdminData, error: orgAdminError } = await supabaseClient
+                            .from('orgadmins')
+                            .select('*')
+                            .eq('username', username)
+                            .single();
+
+                        if (orgAdminData && !orgAdminError && orgAdminData.password === password) {
+                            localStorage.setItem('loggedInAdminUsername', username);
+                            localStorage.setItem('loggedInRole', 'admin');
+                            alert('Login successful!');
+                            window.location.href = 'dbadmin.html';
+                            return;
+                        }
+
+                        let { data: userData, error: userError } = await supabaseClient
+                            .from('users')
+                            .select('*')
+                            .eq('username', username)
+                            .single();
+
+                        if (userData && !userError && userData.password === password) {
+                            localStorage.setItem('loggedInAdminUsername', username);
+                            localStorage.setItem('loggedInOrganisationname', userData.organisation);
+                            let redirectUrl = 'dashboardbusinessmember.html';
+                            let role = 'business';
+
+                            if (userData.team_type === 'Legal Team') {
+                                redirectUrl = 'dashboardlegalteam.html';
+                                role = 'legal';
+                            } else if (userData.team_type === 'Finance Team') {
+                                redirectUrl = 'dashboardfinanceteam.html';
+                                role = 'finance';
+                            }
+
+                            localStorage.setItem('loggedInRole', role);
+                            alert('Login successful!');
+                            window.location.href = redirectUrl;
+                            return;
+                        }
+
+                        alert('Incorrect Username or Password');
+                    } catch (err) {
+                        console.error('Unexpected error during login:', err);
+                        alert('An unexpected error occurred.');
+                    }
+                });
+            }
+
+            // Forgot Password Modal Logic
+            const modal = document.getElementById('forgotPasswordModal');
+            const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+            const closeBtn = modal.querySelector('.btn-close');
+
+            forgotPasswordLink.onclick = function(e) {
+                e.preventDefault();
+                bootstrap.Modal.getOrCreateInstance(modal).show();
+            };
+
+            closeBtn.onclick = function() {
+                bootstrap.Modal.getInstance(modal).hide();
+            };
+
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    bootstrap.Modal.getInstance(modal).hide();
+                }
+            };
+
+            // Forgot Password Form Submission
+            const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+            if (forgotPasswordForm) {
+                forgotPasswordForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+
+                    const email = document.getElementById('resetEmail').value.trim();
+                    let userData = null;
+
+                    try {
+                        let { data: adminData, error: adminError } = await supabaseClient
+                            .from('admins')
+                            .select('*')
+                            .eq('email', email)
+                            .single();
+                        if (adminData && !adminError) {
+                            userData = adminData;
+                        }
+
+                        if (!userData) {
+                            let { data: orgAdminData, error: orgAdminError } = await supabaseClient
+                                .from('orgadmins')
+                                .select('*')
+                                .eq('email', email)
+                                .single();
+                            if (orgAdminData && !orgAdminError) {
+                                userData = orgAdminData;
+                            }
+                        }
+
+                        if (!userData) {
+                            let { data: usersData, error: usersError } = await supabaseClient
+                                .from('users')
+                                .select('*')
+                                .eq('email', email)
+                                .single();
+                            if (usersData && !usersError) {
+                                userData = usersData;
+                            }
+                        }
+
+                        if (userData) {
+                            const resetToken = Math.random().toString(36).substring(2, 15);
+                            const resetUrl = `${window.location.origin}/reset-password.html?token=${resetToken}&email=${encodeURIComponent(email)}`;
+
+                            const response = await fetch('http://localhost:3000/dispatch-email', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    to: email,
+                                    sender: { email: 'Vanshika.aggarwal@bytewisetl.com', name: 'Accordwise' },
+                                    subject: 'Password Reset Request',
+                                    htmlContent: `<p>Click the link below to reset your password:</p><a href="${resetUrl}">Reset Password</a><p>This link will expire in 1 hour.</p>`
+                                })
+                            });
+
+                            if (response.ok) {
+                                alert('A password reset link has been sent to your email.');
+                                bootstrap.Modal.getInstance(modal).hide();
+                            } else {
+                                const errorData = await response.json();
+                                alert(`Failed to send reset email: ${errorData.error || 'Unknown error'}`);
+                            }
+                        } else {
+                            alert('No account found with this email.');
+                        }
+                    } catch (err) {
+                        console.error('Error during forgot password process:', err);
+                        alert('An unexpected error occurred.');
+                    }
+                });
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', waitForSupabase);
+    </script>
+</body>
+</html>

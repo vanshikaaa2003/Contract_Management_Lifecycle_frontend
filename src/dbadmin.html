@@ -1,0 +1,1863 @@
+<!DOCTYPE html>
+<html lang="en" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="vuexy-bootstrap-html-admin-template/full-version/dist/" data-template="vertical-menu-template">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accordwise</title>
+    <!-- Core CSS (Bootstrap 5 + Vuexy Styles) -->
+    <link rel="stylesheet" href="vuexy-bootstrap-html-admin-template/full-version/dist/css/core.css">
+    <!-- Vendors CSS -->
+    <link rel="stylesheet" href="vuexy-bootstrap-html-admin-template/full-version/dist/libs/perfect-scrollbar/perfect-scrollbar.css">
+    <link rel="stylesheet" href="vuexy-bootstrap-html-admin-template/full-version/dist/libs/node-waves/node-waves.css">
+    <!-- Page CSS -->
+    <link rel="stylesheet" href="vuexy-bootstrap-html-admin-template/full-version/dist/css/pages/page-auth.css">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="vuexy-bootstrap-html-admin-template/full-version/dist/fonts/fontawesome.css">
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" onload="supabaseLoaded = true"></script>
+    <!-- PapaParse and XLSX for File Parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="icon" href="data:,"> <!-- Suppress favicon error -->
+    <!-- Custom CSS for Submenu -->
+    <style>
+        .menu-sub {
+            display: none; /* Hidden by default */
+        }
+        .menu-sub.show {
+            display: block !important; /* Always shown when 'show' class is present */
+        }
+    </style>
+</head>
+<body>
+    <!-- Layout Wrapper -->
+    <div class="layout-wrapper layout-content-navbar">
+        <div class="layout-container">
+            <!-- Sidebar (Menu) -->
+            <aside id="sidebar" class="layout-menu menu-vertical menu bg-menu-theme">
+                <div class="app-brand p-3">
+                    <a href="#" class="app-brand-link">
+                        <span class="app-brand-text demo menu-text fw-bold ms-2">Accordwise</span>
+                    </a>
+                    <a href="javascript:void(0);" id="closeSidebar" class="layout-menu-toggle menu-link text-large ms-auto">
+                        <i class="fas fa-times menu-toggle-icon"></i>
+                    </a>
+                </div>
+                <div class="menu-inner-shadow"></div>
+                <ul class="menu-inner py-1">
+                    <li class="menu-item active">
+                        <a href="#" class="menu-link" onclick="showTeams(this); return false;">
+                            <i class="menu-icon tf-icons fas fa-users"></i>
+                            <div>Teams</div>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#" class="menu-link" onclick="showMembers(this); return false;">
+                            <i class="menu-icon tf-icons fas fa-user"></i>
+                            <div>Members</div>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#" class="menu-link" onclick="console.log('Parties clicked'); return false;">
+                            <i class="menu-icon tf-icons fas fa-building"></i>
+                            <div>Parties</div>
+                        </a>
+                        <ul id="partiesSubMenu" class="menu-sub show">
+                            <li class="menu-item">
+                                <a href="#" class="menu-link" onclick="showAccounts(this); return false;">
+                                    <div>Accounts</div>
+                                </a>
+                            </li>
+                            <li class="menu-item">
+                                <a href="#" class="menu-link" onclick="showContacts(this); return false;">
+                                    <div>Contacts</div>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </aside>
+
+            <!-- Layout Page -->
+            <div id="mainContent" class="layout-page">
+                <!-- Navbar -->
+                <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+                    <div class="navbar-nav-right d-flex align-items-center">
+                        <button id="openSidebar" class="btn btn-icon me-2 d-xl-none">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <ul class="navbar-nav flex-row align-items-center ms-auto">
+                            <li class="nav-item">
+                                <a class="nav-link" href="javascript:void(0)">
+                                    <i class="fas fa-cog"></i>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="javascript:void(0)">
+                                    <i class="fas fa-user-circle"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+
+                <!-- Content Wrapper -->
+                <div class="content-wrapper">
+                    <div class="container-xxl flex-grow-1 container-p-y">
+                        <div id="teamContent" class="card">
+                            <!-- Content dynamically loaded here -->
+                        </div>
+                    </div>
+                    <!-- Footer -->
+                    <footer class="content-footer footer bg-footer-theme">
+                        <div class="container-xxl">
+                            <div class="footer-container d-flex align-items-center justify-content-between py-2">
+                                <div>
+                                    © <script>document.write(new Date().getFullYear());</script>, Accordwise
+                                </div>
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Add Team Modal -->
+    <div class="modal fade" id="addTeamModal" tabindex="-1" aria-labelledby="addTeamModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addTeamModalLabel">Add New Team</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="newTeamName" class="form-label">Team Name</label>
+                        <input type="text" id="newTeamName" class="form-control" placeholder="Enter team name">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary waves-effect waves-light" onclick="createTeam(document.getElementById('newTeamName').value)">Save Team</button>
+                    <button class="btn btn-secondary waves-effect waves-light" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Member Modal -->
+    <div class="modal fade" id="addMemberModal" tabindex="-1" aria-labelledby="addMemberModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addMemberModalLabel">Add New Member</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="memberTeamName" class="form-label">Team Name</label>
+                        <select id="memberTeamName" class="form-select">
+                            <option value="">Select Team</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="memberName" class="form-label">Name</label>
+                        <input type="text" id="memberName" class="form-control" placeholder="Enter name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="memberEmail" class="form-label">Email</label>
+                        <input type="email" id="memberEmail" class="form-control" placeholder="Enter email">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary waves-effect waves-light" onclick="saveNewMember()">Save</button>
+                    <button class="btn btn-secondary waves-effect waves-light" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Upload Modal -->
+    <div class="modal fade" id="bulkUploadModal" tabindex="-1" aria-labelledby="bulkUploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bulkUploadModalLabel">Bulk Upload Members</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Download the sample Excel file to see the required format:</p>
+                    <button class="btn btn-outline-primary waves-effect waves-light mb-3" onclick="downloadSampleExcel()">Download Sample Excel</button>
+                    <div class="mt-3">
+                        <label for="bulkUploadFile" class="form-label">Choose File</label>
+                        <input type="file" id="bulkUploadFile" class="form-control" accept=".csv,.xlsx" onchange="handleBulkUpload(this.files[0])">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary waves-effect waves-light" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Account Modal -->
+    <div class="modal fade" id="addAccountModal" tabindex="-1" aria-labelledby="addAccountModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addAccountModalLabel">Add New Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="accountName" class="form-label">Account Name</label>
+                        <input type="text" id="accountName" class="form-control" placeholder="Enter account name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="accountAddress" class="form-label">Address</label>
+                        <input type="text" id="accountAddress" class="form-control" placeholder="Enter address">
+                    </div>
+                    <div class="mb-3">
+                        <label for="taxNumber" class="form-label">Tax Number</label>
+                        <input type="text" id="taxNumber" class="form-control" placeholder="Enter tax number">
+                    </div>
+                    <div class="mb-3">
+                        <label for="accountEmail" class="form-label">Email</label>
+                        <input type="email" id="accountEmail" class="form-control" placeholder="Enter email">
+                    </div>
+                    <div class="mb-3">
+                        <label for="accountAttachments" class="form-label">Attachments</label>
+                        <input type="file" id="accountAttachments" class="form-control" accept=".doc,.docx,.pdf">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary waves-effect waves-light" onclick="saveNewAccount()">Save</button>
+                    <button class="btn btn-secondary waves-effect waves-light" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Account Modal -->
+    <div class="modal fade" id="editAccountModal" tabindex="-1" aria-labelledby="editAccountModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editAccountModalLabel">Edit Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editAccountName" class="form-label">Account Name</label>
+                        <input type="text" id="editAccountName" class="form-control" placeholder="Enter account name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editAccountAddress" class="form-label">Address</label>
+                        <input type="text" id="editAccountAddress" class="form-control" placeholder="Enter address">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editAccountTaxNumber" class="form-label">Tax Number</label>
+                        <input type="text" id="editAccountTaxNumber" class="form-control" placeholder="Enter tax number">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editAccountEmail" class="form-label">Email</label>
+                        <input type="email" id="editAccountEmail" class="form-control" placeholder="Enter email">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editAccountAttachments" class="form-label">Attachments</label>
+                        <input type="file" id="editAccountAttachments" class="form-control" accept=".doc,.docx,.pdf">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary waves-effect waves-light" onclick="saveEditedAccount()">Save</button>
+                    <button class="btn btn-secondary waves-effect waves-light" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Contact Modal -->
+    <div class="modal fade" id="addContactModal" tabindex="-1" aria-labelledby="addContactModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addContactModalLabel">Add New Contact</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="contactAccountName" class="form-label">Account Name</label>
+                        <select id="contactAccountName" class="form-select">
+                            <option value="">Select Account Name</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="contactName" class="form-label">Name</label>
+                        <input type="text" id="contactName" class="form-control" placeholder="Enter name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="contactDept" class="form-label">Department</label>
+                        <input type="text" id="contactDept" class="form-control" placeholder="Enter department">
+                    </div>
+                    <div class="mb-3">
+                        <label for="contactEmail" class="form-label">Email</label>
+                        <input type="email" id="contactEmail" class="form-control" placeholder="Enter email">
+                    </div>
+                    <div class="mb-3">
+                        <label for="contactMobile" class="form-label">Mobile</label>
+                        <input type="tel" id="contactMobile" class="form-control" placeholder="Enter mobile">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary waves-effect waves-light" onclick="saveNewContact()">Save</button>
+                    <button class="btn btn-secondary waves-effect waves-light" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Contact Modal -->
+    <div class="modal fade" id="editContactModal" tabindex="-1" aria-labelledby="editContactModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editContactModalLabel">Edit Contact</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="editContactAccountName" class="form-label">Account Name</label>
+                        <select id="editContactAccountName" class="form-select">
+                            <option value="">Select Account Name</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editContactName" class="form-label">Name</label>
+                        <input type="text" id="editContactName" class="form-control" placeholder="Enter name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editContactDept" class="form-label">Department</label>
+                        <input type="text" id="editContactDept" class="form-control" placeholder="Enter department">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editContactEmail" class="form-label">Email</label>
+                        <input type="email" id="editContactEmail" class="form-control" placeholder="Enter email">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editContactMobile" class="form-label">Mobile</label>
+                        <input type="tel" id="editContactMobile" class="form-control" placeholder="Enter mobile">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary waves-effect waves-light" onclick="saveEditedContact()">Save</button>
+                    <button class="btn btn-secondary waves-effect waves-light" data-bs-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contacts Popup Modal -->
+    <div class="modal fade" id="contactsPopupModal" tabindex="-1" aria-labelledby="contactsPopupModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="contactsPopupModalLabel">Contacts for Account</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Department</th>
+                                    <th>Email</th>
+                                    <th>Mobile</th>
+                                </tr>
+                            </thead>
+                            <tbody id="contactsPopupTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary waves-effect waves-light" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core JS Files -->
+    <script src="vuexy-bootstrap-html-admin-template/full-version/dist/libs/popper/popper.js"></script>
+    <script src="vuexy-bootstrap-html-admin-template/full-version/dist/js/bootstrap.js"></script>
+    <script src="vuexy-bootstrap-html-admin-template/full-version/dist/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+
+    <!-- Custom Script -->
+    <script>
+        let supabaseLoaded = false;
+        let supabaseClient;
+
+        function waitForSupabase() {
+            if (typeof supabase !== 'undefined') {
+                initializeApp();
+            } else if (!supabaseLoaded) {
+                console.log('Waiting for Supabase library to load...');
+                setTimeout(waitForSupabase, 100);
+            } else {
+                console.error('Supabase library failed to load.');
+                alert('Error: Could not load the Supabase library.');
+            }
+        }
+
+        function generateRandomString(length) {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return result;
+        }
+
+        async function sendEmail(toEmail, username, password) {
+            try {
+                const response = await fetch('http://localhost:3000/send-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ toEmail, username, password }),
+                });
+                const responseText = await response.text();
+                if (!response.ok) throw new Error(`Failed to send email: ${responseText}`);
+                return responseText;
+            } catch (error) {
+                console.error('Email send error:', error.message);
+                throw error;
+            }
+        }
+
+        async function getAdminDetails(username) {
+            const { data, error } = await supabaseClient
+                .from('orgadmins')
+                .select('username, organisation_name, org_code')
+                .eq('username', username)
+                .single();
+            if (error) throw new Error('Could not fetch admin details: ' + error.message);
+            return { username: data.username, orgName: data.organisation_name, orgCode: data.org_code };
+        }
+
+        async function createTeamsTableIfNotExists(orgName) {
+            const tableName = `${orgName.toLowerCase().replace(/[^a-z0-9_]/g, '_')}_teams`;
+            const { data: tableExists, error: checkError } = await supabaseClient
+                .rpc('check_contacts_table_exists', { table_name: tableName });
+            if (checkError) throw new Error(`Error checking table existence: ${checkError.message}`);
+            if (!tableExists) {
+                const { error: createError } = await supabaseClient.rpc('run_contacts_sql', {
+                    sql_statement: `
+                        CREATE TABLE ${tableName} (
+                            id SERIAL PRIMARY KEY,
+                            team_name TEXT NOT NULL UNIQUE,
+                            team_type TEXT NOT NULL UNIQUE,
+                            created_at TIMESTAMP DEFAULT NOW()
+                        );
+                    `
+                });
+                if (createError) throw new Error(`Failed to create table ${tableName}: ${createError.message}`);
+                const defaultTeams = [
+                    { team_name: 'Legal Team', team_type: 'legal' },
+                    { team_name: 'Finance Team', team_type: 'finance' }
+                ];
+                const { error: insertError } = await supabaseClient.from(tableName).insert(defaultTeams);
+                if (insertError) throw new Error(`Failed to insert default teams: ${insertError.message}`);
+            }
+            return tableName;
+        }
+
+        async function createAccountsTableIfNotExists(orgName) {
+            const tableName = `${orgName.toLowerCase().replace(/[^a-z0-9_]/g, '_')}_accounts`;
+            const { data: tableExists, error: checkError } = await supabaseClient
+                .rpc('check_contacts_table_exists', { table_name: tableName });
+            if (checkError) throw new Error(`Error checking table existence: ${checkError.message}`);
+            if (!tableExists) {
+                const { error: createError } = await supabaseClient.rpc('run_contacts_sql', {
+                    sql_statement: `
+                        CREATE TABLE ${tableName} (
+                            ac_code TEXT PRIMARY KEY,
+                            name TEXT NOT NULL,
+                            address TEXT NOT NULL,
+                            tax_number TEXT NOT NULL,
+                            email TEXT NOT NULL,
+                            attachments TEXT,
+                            created_at TIMESTAMP DEFAULT NOW()
+                        );
+                    `
+                });
+                if (createError) throw new Error(`Failed to create table ${tableName}: ${createError.message}`);
+            }
+            return tableName;
+        }
+
+        async function createNewContactsTableIfNotExists(orgName) {
+            const tableName = `${orgName.toLowerCase().replace(/[^a-z0-9_]/g, '_')}_contacts`;
+            const { data: tableExists, error: checkError } = await supabaseClient
+                .rpc('check_contacts_table_exists', { table_name: tableName });
+            if (checkError) throw new Error(`Error checking table existence: ${checkError.message}`);
+            if (!tableExists) {
+                const { error: createError } = await supabaseClient.rpc('run_contacts_sql', {
+                    sql_statement: `
+                        CREATE TABLE ${tableName} (
+                            contact_code TEXT PRIMARY KEY,
+                            ac_name TEXT NOT NULL,
+                            name TEXT NOT NULL,
+                            dept TEXT NOT NULL,
+                            email TEXT NOT NULL,
+                            mobile TEXT NOT NULL,
+                            created_at TIMESTAMP DEFAULT NOW()
+                        );
+                    `
+                });
+                if (createError) throw new Error(`Failed to create table ${tableName}: ${createError.message}`);
+            }
+            return tableName;
+        }
+
+        async function logAction(action, team, oldValue = null, newValue = null) {
+            const adminUsername = localStorage.getItem('loggedInAdminUsername');
+            if (!adminUsername) {
+                console.error('No admin logged in. Cannot log action.');
+                return;
+            }
+
+            try {
+                const { data: adminData, error: adminError } = await supabaseClient
+                    .from('orgadmins')
+                    .select('username, organisation_name')
+                    .eq('username', adminUsername)
+                    .single();
+                if (adminError) throw new Error(`Failed to fetch admin details: ${adminError.message}`);
+
+                const logEntry = {
+                    name: adminData.username,
+                    organisation: adminData.organisation_name,
+                    team: team || null,
+                    action: action,
+                    timestamp: new Date().toISOString(),
+                    old_value: oldValue ? JSON.stringify(oldValue) : null,
+                    new_value: newValue ? JSON.stringify(newValue) : null
+                };
+
+                const { error: logError } = await supabaseClient.from('logs').insert(logEntry);
+                if (logError) throw new Error(`Failed to log action: ${logError.message}`);
+            } catch (err) {
+                console.error('Error logging action:', err.message);
+            }
+        }
+
+        function initializeApp() {
+            const supabaseUrl = '***REMOVED***';
+            const supabaseKey = '***REMOVED***';
+            supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+
+            document.getElementById('openSidebar').onclick = function() {
+                sidebar.classList.remove('layout-menu-hidden');
+                mainContent.classList.add('shifted');
+            };
+
+            document.getElementById('closeSidebar').onclick = function() {
+                sidebar.classList.add('layout-menu-hidden');
+                mainContent.classList.remove('shifted');
+            };
+
+            showTeams(document.querySelector('.menu-item.active .menu-link'));
+            logAction('login', null, null, { username: localStorage.getItem('loggedInAdminUsername') });
+        }
+
+        async function showTeams(element) {
+            const teamContent = document.getElementById('teamContent');
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => item.classList.remove('active'));
+            element.parentElement.classList.add('active');
+
+            const adminUsername = localStorage.getItem('loggedInAdminUsername');
+            if (!adminUsername) {
+                alert('No admin logged in. Please log in first.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            let adminOrg;
+            try {
+                const { orgName } = await getAdminDetails(adminUsername);
+                adminOrg = orgName;
+            } catch (error) {
+                alert(error.message);
+                return;
+            }
+
+            teamContent.innerHTML = `
+                <div class="card-header">
+                    <h5 class="mb-0">Teams</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <button class="btn btn-primary waves-effect waves-light" onclick="openAddTeamModal('${adminOrg}')">Add New Team</button>
+                    </div>
+                    <div class="mb-3">
+                        <input type="text" id="teamFilter" class="form-control" placeholder="Filter teams..." onkeyup="filterTeams()">
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Team Name</th>
+                                    <th>Members</th>
+                                    <th>Head</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teamTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            await populateTeamTable(adminOrg);
+        }
+
+        async function populateTeamTable(adminOrg) {
+            const teamTableBody = document.getElementById('teamTableBody');
+            teamTableBody.innerHTML = '';
+
+            const teamsTableName = await createTeamsTableIfNotExists(adminOrg);
+
+            try {
+                const { data: teamData, error: teamError } = await supabaseClient
+                    .from(teamsTableName)
+                    .select('team_name, team_type');
+                if (teamError) throw new Error(`Failed to fetch teams: ${teamError.message}`);
+
+                const { data: userData, error: userError } = await supabaseClient
+                    .from('users')
+                    .select('id, team_type, name, email, role, organisation')
+                    .eq('organisation', adminOrg);
+                if (userError) throw new Error(`Failed to fetch user data: ${userError.message}`);
+
+                const teamStats = {};
+                teamData.forEach(team => {
+                    teamStats[team.team_name] = { name: team.team_name, members: 0, head: null };
+                });
+
+                userData.forEach(row => {
+                    if (teamStats[row.team_type]) {
+                        teamStats[row.team_type].members++;
+                        if (row.role === 'head') teamStats[row.team_type].head = `${row.name} (${row.email})`;
+                    }
+                });
+
+                for (const teamName in teamStats) {
+                    const team = teamStats[teamName];
+                    const row = document.createElement('tr');
+                    const memberCount = team.members || 0;
+                    const currentHead = team.head || 'No head assigned';
+                    const isDefaultTeam = teamName === 'Legal Team' || teamName === 'Finance Team';
+
+                    row.innerHTML = `
+                        <td>${team.name}</td>
+                        <td>${memberCount}</td>
+                        <td class="head-cell">${currentHead}</td>
+                        <td class="action-buttons">
+                            <button class="btn btn-sm btn-primary waves-effect waves-light edit-btn">Edit</button>
+                            ${!isDefaultTeam && memberCount === 0 ? `<button class="btn btn-sm btn-icon btn-danger waves-effect waves-light delete-btn"><i class="fas fa-trash"></i></button>` : ''}
+                        </td>
+                    `;
+
+                    const editBtn = row.querySelector('.edit-btn');
+                    editBtn.addEventListener('click', async () => {
+                        if (row.classList.contains('editing')) return;
+                        row.classList.add('editing');
+                        const headCell = row.querySelector('.head-cell');
+                        const buttonsCell = row.querySelector('.action-buttons');
+
+                        const { data: teamMembers, error: memberError } = await supabaseClient
+                            .from('users')
+                            .select('id, name, email')
+                            .eq('organisation', adminOrg)
+                            .eq('team_type', teamName);
+                        if (memberError) {
+                            headCell.innerHTML = 'Error loading members';
+                            return;
+                        }
+
+                        const headOptions = teamMembers.length > 0
+                            ? teamMembers.map(member => `<option value="${member.id}" ${member.id === (team.head ? teamMembers.find(m => m.email === team.head.split('(')[1].slice(0, -1))?.id : '') ? 'selected' : ''}>${member.name} (${member.email})</option>`).join('')
+                            : '<option value="">No members available</option>';
+
+                        headCell.innerHTML = `
+                            <select class="form-select head-select" data-team-name="${teamName}">
+                                <option value="">Select Head</option>
+                                ${headOptions}
+                            </select>
+                        `;
+                        buttonsCell.innerHTML = `
+                            <button class="btn btn-sm btn-success waves-effect waves-light save-btn">Save</button>
+                            <button class="btn btn-sm btn-secondary waves-effect waves-light cancel-btn">Cancel</button>
+                        `;
+
+                        const saveBtn = row.querySelector('.save-btn');
+                        const cancelBtn = row.querySelector('.cancel-btn');
+
+                        saveBtn.addEventListener('click', async () => {
+                            const selectedUserId = row.querySelector('.head-select').value;
+                            const oldHead = team.head;
+                            await saveTeamHead(teamName, adminOrg, selectedUserId, userData);
+                            await logAction('edit', teamName, { head: oldHead }, { head: selectedUserId ? teamMembers.find(m => m.id === selectedUserId)?.name + ' (' + teamMembers.find(m => m.id === selectedUserId)?.email + ')' : 'No head assigned' });
+                            row.classList.remove('editing');
+                            populateTeamTable(adminOrg);
+                        });
+
+                        cancelBtn.addEventListener('click', () => {
+                            row.classList.remove('editing');
+                            headCell.innerHTML = currentHead;
+                            buttonsCell.innerHTML = `
+                                <button class="btn btn-sm btn-primary waves-effect waves-light edit-btn">Edit</button>
+                                ${!isDefaultTeam && memberCount === 0 ? `<button class="btn btn-sm btn-icon btn-danger waves-effect waves-light delete-btn"><i class="fas fa-trash"></i></button>` : ''}
+                            `;
+                            if (!isDefaultTeam) bindDeleteEvent(row.querySelector('.delete-btn'), teamName, adminOrg, teamsTableName);
+                        });
+                    });
+
+                    if (!isDefaultTeam) {
+                        const deleteBtn = row.querySelector('.delete-btn');
+                        bindDeleteEvent(deleteBtn, teamName, adminOrg, teamsTableName);
+                    }
+
+                    teamTableBody.appendChild(row);
+                }
+            } catch (err) {
+                teamTableBody.innerHTML = '<tr><td colspan="4" class="text-center">Error loading teams.</td></tr>';
+            }
+        }
+
+        function filterTeams() {
+            const filterValue = document.getElementById('teamFilter').value.toLowerCase();
+            const rows = document.getElementById('teamTableBody').getElementsByTagName('tr');
+            for (let row of rows) {
+                const cells = row.getElementsByTagName('td');
+                const teamName = cells[0].textContent.toLowerCase();
+                const members = cells[1].textContent.toLowerCase();
+                const head = cells[2].textContent.toLowerCase();
+                row.style.display = (teamName.includes(filterValue) || members.includes(filterValue) || head.includes(filterValue)) ? '' : 'none';
+            }
+        }
+
+        function bindDeleteEvent(deleteBtn, teamName, adminOrg, teamsTableName) {
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', async () => {
+                    if (!confirm(`Are you sure you want to delete ${teamName}?`)) return;
+
+                    try {
+                        const { data: oldData, error: fetchError } = await supabaseClient
+                            .from(teamsTableName)
+                            .select('team_name, team_type')
+                            .eq('team_name', teamName)
+                            .single();
+                        if (fetchError) throw new Error(`Failed to fetch team: ${fetchError.message}`);
+
+                        const { error } = await supabaseClient
+                            .from(teamsTableName)
+                            .delete()
+                            .eq('team_name', teamName);
+                        if (error) throw new Error(`Failed to delete team: ${error.message}`);
+
+                        await logAction('delete', teamName, oldData, null);
+                        populateTeamTable(adminOrg);
+                    } catch (err) {
+                        alert(`Error: ${err.message}`);
+                    }
+                });
+            }
+        }
+
+        async function saveTeamHead(teamName, adminOrg, selectedUserId, userData) {
+            try {
+                if (selectedUserId) {
+                    const { data: existingHead, error: fetchError } = await supabaseClient
+                        .from('users')
+                        .select('id')
+                        .eq('team_type', teamName)
+                        .eq('organisation', adminOrg)
+                        .eq('role', 'head')
+                        .single();
+                    if (fetchError && fetchError.code !== 'PGRST116') throw new Error(`Failed to fetch existing head: ${fetchError.message}`);
+
+                    if (existingHead && existingHead.id !== selectedUserId) {
+                        const { error: demoteError } = await supabaseClient
+                            .from('users')
+                            .update({ role: 'member' })
+                            .eq('id', existingHead.id);
+                        if (demoteError) throw new Error(`Failed to demote old head: ${demoteError.message}`);
+                    }
+
+                    const { error: promoteError } = await supabaseClient
+                        .from('users')
+                        .update({ role: 'head' })
+                        .eq('id', selectedUserId)
+                        .eq('organisation', adminOrg)
+                        .eq('team_type', teamName);
+                    if (promoteError) throw new Error(`Failed to promote new head: ${promoteError.message}`);
+                }
+            } catch (err) {
+                alert(`Error: ${err.message}`);
+            }
+        }
+
+        function openAddTeamModal(adminOrg) {
+            document.getElementById('addTeamModal').dataset.org = adminOrg;
+            document.getElementById('newTeamName').value = '';
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('addTeamModal')).show();
+        }
+
+        async function createTeam(team) {
+            const adminUsername = localStorage.getItem('loggedInAdminUsername');
+            if (!adminUsername) {
+                alert('No admin logged in. Please log in first.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            if (!team.trim()) {
+                alert('Please enter a team name.');
+                return;
+            }
+
+            let adminOrg;
+            try {
+                const { orgName } = await getAdminDetails(adminUsername);
+                adminOrg = orgName;
+            } catch (error) {
+                alert(error.message);
+                return;
+            }
+
+            const teamsTableName = await createTeamsTableIfNotExists(adminOrg);
+
+            try {
+                const teamData = {
+                    team_name: team.trim(),
+                    team_type: team.trim().toLowerCase(),
+                    created_at: new Date().toISOString()
+                };
+                const { error: teamInsertError } = await supabaseClient
+                    .from(teamsTableName)
+                    .insert(teamData);
+                if (teamInsertError) throw new Error(`Failed to insert team: ${teamInsertError.message}`);
+
+                await logAction('add', team, null, teamData);
+                alert(`${team} Team Created!`);
+                bootstrap.Modal.getInstance(document.getElementById('addTeamModal')).hide();
+                populateTeamTable(adminOrg);
+            } catch (err) {
+                alert(`Error: ${err.message}`);
+            }
+        }
+
+        async function showMembers(element) {
+            const teamContent = document.getElementById('teamContent');
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => item.classList.remove('active'));
+            element.parentElement.classList.add('active');
+
+            const adminUsername = localStorage.getItem('loggedInAdminUsername');
+            if (!adminUsername) {
+                alert('No admin logged in. Please log in first.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            let adminOrg;
+            try {
+                const { orgName } = await getAdminDetails(adminUsername);
+                adminOrg = orgName;
+            } catch (error) {
+                alert(error.message);
+                return;
+            }
+
+            teamContent.innerHTML = `
+                <div class="card-header">
+                    <h5 class="mb-0">Members</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3 d-flex gap-2">
+                        <button class="btn btn-primary waves-effect waves-light" onclick="openAddMemberModal('${adminOrg}')">Add Member</button>
+                        <button class="btn btn-info waves-effect waves-light" onclick="triggerBulkUpload()">Bulk Upload</button>
+                    </div>
+                    <div class="mb-3">
+                        <input type="text" id="memberFilter" class="form-control" placeholder="Filter members..." onkeyup="filterMembers()">
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Team Name</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="memberTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            await populateMemberTable(adminOrg);
+        }
+
+        async function populateMemberTable(adminOrg) {
+            const memberTableBody = document.getElementById('memberTableBody');
+            memberTableBody.innerHTML = '';
+
+            try {
+                const { data: userData, error } = await supabaseClient
+                    .from('users')
+                    .select('id, team_type, name, email, status')
+                    .eq('organisation', adminOrg);
+                if (error) throw new Error(`Failed to fetch members: ${error.message}`);
+
+                const teamsTableName = `${adminOrg.toLowerCase().replace(/[^a-z0-9_]/g, '_')}_teams`;
+                const { data: teamData, error: teamError } = await supabaseClient
+                    .from(teamsTableName)
+                    .select('team_name, team_type');
+                if (teamError) throw new Error(`Failed to fetch teams: ${teamError.message}`);
+
+                const teamMap = {};
+                teamData.forEach(team => teamMap[team.team_type] = team.team_name);
+
+                if (userData && userData.length > 0) {
+                    userData.forEach(user => {
+                        const teamName = teamMap[user.team_type] || user.team_type;
+                        const row = document.createElement('tr');
+                        row.dataset.id = user.id;
+                        row.innerHTML = `
+                            <td class="team-name">${teamName}</td>
+                            <td class="name">${user.name}</td>
+                            <td class="email">${user.email}</td>
+                            <td class="status"><span class="badge ${user.status === 'enable' ? 'bg-label-success' : 'bg-label-danger'}">${user.status || 'enable'}</span></td>
+                            <td class="action-buttons">
+                                <button class="btn btn-sm btn-primary waves-effect waves-light edit-btn">Edit</button>
+                                <button class="btn btn-sm btn-${user.status === 'enable' ? 'danger' : 'success'} waves-effect waves-light toggle-btn">${user.status === 'enable' ? 'Disable' : 'Enable'}</button>
+                            </td>
+                        `;
+
+                        row.querySelector('.edit-btn').addEventListener('click', () => {
+                            if (row.classList.contains('editing')) return;
+                            row.classList.add('editing');
+                            const teamNameCell = row.querySelector('.team-name');
+                            const nameCell = row.querySelector('.name');
+                            const emailCell = row.querySelector('.email');
+                            const buttonsCell = row.querySelector('.action-buttons');
+
+                            teamNameCell.innerHTML = `<input type="text" class="form-control" value="${teamName}">`;
+                            nameCell.innerHTML = `<input type="text" class="form-control" value="${user.name}">`;
+                            emailCell.innerHTML = `<input type="email" class="form-control" value="${user.email}" readonly>`;
+                            buttonsCell.innerHTML = `
+                                <button class="btn btn-sm btn-success waves-effect waves-light save-btn">Save</button>
+                                <button class="btn btn-sm btn-secondary waves-effect waves-light cancel-btn">Cancel</button>
+                            `;
+
+                            const saveBtn = row.querySelector('.save-btn');
+                            const cancelBtn = row.querySelector('.cancel-btn');
+
+                            saveBtn.addEventListener('click', async () => {
+                                const newTeamName = row.querySelector('.team-name input').value.trim();
+                                const newName = row.querySelector('.name input').value.trim();
+                                if (!newTeamName || !newName) {
+                                    alert('Team Name and Name must be filled.');
+                                    return;
+                                }
+                                await saveEditedMember(user.id, newTeamName, newName, user.email, adminOrg);
+                                row.classList.remove('editing');
+                                populateMemberTable(adminOrg);
+                            });
+
+                            cancelBtn.addEventListener('click', () => {
+                                row.classList.remove('editing');
+                                populateMemberTable(adminOrg);
+                            });
+                        });
+
+                        row.querySelector('.toggle-btn').addEventListener('click', async () => {
+                            const newStatus = user.status === 'enable' ? 'disable' : 'enable';
+                            await toggleMemberStatus(user.id, newStatus, adminOrg);
+                        });
+
+                        memberTableBody.appendChild(row);
+                    });
+                } else {
+                    memberTableBody.innerHTML = '<tr><td colspan="5" class="text-center">No members found.</td></tr>';
+                }
+            } catch (err) {
+                memberTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Error loading members.</td></tr>';
+            }
+        }
+
+        function filterMembers() {
+            const filterValue = document.getElementById('memberFilter').value.toLowerCase();
+            const rows = document.getElementById('memberTableBody').getElementsByTagName('tr');
+            for (let row of rows) {
+                const cells = row.getElementsByTagName('td');
+                const teamName = cells[0].textContent.toLowerCase();
+                const name = cells[1].textContent.toLowerCase();
+                const email = cells[2].textContent.toLowerCase();
+                const status = cells[3].textContent.toLowerCase();
+                row.style.display = (teamName.includes(filterValue) || name.includes(filterValue) || email.includes(filterValue) || status.includes(filterValue)) ? '' : 'none';
+            }
+        }
+
+        async function saveEditedMember(id, teamName, name, email, adminOrg) {
+            try {
+                const { data: oldData, error: fetchError } = await supabaseClient
+                    .from('users')
+                    .select('team_type, name, email')
+                    .eq('id', id)
+                    .eq('organisation', adminOrg)
+                    .single();
+                if (fetchError) throw new Error(`Failed to fetch old member data: ${fetchError.message}`);
+
+                const newData = { team_type: teamName, name, email };
+                const { error } = await supabaseClient
+                    .from('users')
+                    .update(newData)
+                    .eq('id', id)
+                    .eq('organisation', adminOrg);
+                if (error) throw new Error(`Failed to update member: ${error.message}`);
+
+                await logAction('edit', teamName, oldData, newData);
+            } catch (err) {
+                alert(`Error: ${err.message}`);
+            }
+        }
+
+        async function toggleMemberStatus(id, newStatus, adminOrg) {
+            if (!confirm(`Are you sure you want to ${newStatus === 'enable' ? 'enable' : 'disable'} this member?`)) return;
+
+            try {
+                const { data: oldData, error: fetchError } = await supabaseClient
+                    .from('users')
+                    .select('team_type, status')
+                    .eq('id', id)
+                    .eq('organisation', adminOrg)
+                    .single();
+                if (fetchError) throw new Error(`Failed to fetch member status: ${fetchError.message}`);
+
+                const { error } = await supabaseClient
+                    .from('users')
+                    .update({ status: newStatus })
+                    .eq('id', id)
+                    .eq('organisation', adminOrg);
+                if (error) throw new Error(`Failed to toggle status: ${error.message}`);
+
+                await logAction(newStatus === 'enable' ? 'enable' : 'disable', oldData.team_type, { status: oldData.status }, { status: newStatus });
+                populateMemberTable(adminOrg);
+            } catch (err) {
+                alert(`Error: ${err.message}`);
+            }
+        }
+
+        function openAddMemberModal(adminOrg) {
+            const modal = document.getElementById('addMemberModal');
+            modal.dataset.org = adminOrg;
+            const teamSelect = document.getElementById('memberTeamName');
+            teamSelect.innerHTML = '<option value="">Select Team</option>';
+
+            supabaseClient
+                .from(`${adminOrg.toLowerCase().replace(/[^a-z0-9_]/g, '_')}_teams`)
+                .select('team_name')
+                .then(({ data, error }) => {
+                    if (!error && data) {
+                        data.forEach(team => {
+                            teamSelect.innerHTML += `<option value="${team.team_name}">${team.team_name}</option>`;
+                        });
+                    }
+                });
+
+            document.getElementById('memberName').value = '';
+            document.getElementById('memberEmail').value = '';
+            bootstrap.Modal.getOrCreateInstance(modal).show();
+        }
+
+        async function saveNewMember() {
+            const teamName = document.getElementById('memberTeamName').value;
+            const name = document.getElementById('memberName').value.trim();
+            const email = document.getElementById('memberEmail').value.trim();
+            const adminOrg = document.getElementById('addMemberModal').dataset.org;
+
+            if (!teamName || !name || !email) {
+                alert('Please fill in all fields.');
+                return;
+            }
+
+            try {
+                const newMember = {
+                    team_type: teamName,
+                    name,
+                    email,
+                    username: generateRandomString(8),
+                    password: generateRandomString(12),
+                    role: 'member',
+                    organisation: adminOrg,
+                    status: 'enable',
+                    created_at: new Date().toISOString()
+                };
+                const { data, error } = await supabaseClient
+                    .from('users')
+                    .insert(newMember)
+                    .select();
+                if (error) throw new Error(`Failed to add member: ${error.message}`);
+
+                await sendEmail(email, data[0].username, data[0].password);
+                await logAction('add', teamName, null, newMember);
+                bootstrap.Modal.getInstance(document.getElementById('addMemberModal')).hide();
+                populateMemberTable(adminOrg);
+            } catch (err) {
+                alert(`Error: ${err.message}`);
+            }
+        }
+
+        function triggerBulkUpload() {
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('bulkUploadModal')).show();
+        }
+
+        function downloadSampleExcel() {
+            const sampleData = [
+                ['name', 'email', 'role', 'team_name']
+            ];
+
+            const ws = XLSX.utils.aoa_to_sheet(sampleData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Sample Format');
+            XLSX.writeFile(wb, 'bulk_upload_sample.xlsx');
+        }
+
+        async function handleBulkUpload(file) {
+            if (!file) {
+                alert('Please select a file.');
+                return;
+            }
+
+            const adminUsername = localStorage.getItem('loggedInAdminUsername');
+            if (!adminUsername) {
+                alert('No admin logged in. Please log in first.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            let adminOrg;
+            try {
+                const { orgName } = await getAdminDetails(adminUsername);
+                adminOrg = orgName;
+            } catch (error) {
+                alert(error.message);
+                return;
+            }
+
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+            if (fileExtension === 'csv') {
+                Papa.parse(file, {
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: async (result) => await processBulkUpload(result.data, adminOrg),
+                    error: (error) => alert('Error parsing CSV file.')
+                });
+            } else if (fileExtension === 'xlsx') {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const sheet = workbook.Sheets[sheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(sheet);
+                    await processBulkUpload(jsonData, adminOrg);
+                };
+                reader.readAsArrayBuffer(file);
+            }
+            document.getElementById('bulkUploadFile').value = '';
+            bootstrap.Modal.getInstance(document.getElementById('bulkUploadModal')).hide();
+        }
+
+        async function processBulkUpload(data, adminOrg) {
+            const users = [];
+            data.forEach(row => {
+                const teamName = row['team_name'] || row['Team Name'] || '';
+                const name = row['name'] || row['Name'] || '';
+                const email = row['email'] || row['Email'] || '';
+                let role = (row['role'] || row['Role'] || '').toLowerCase();
+                role = (role === 'head' || role === 'member') ? role : 'member';
+                if (teamName && name && email) {
+                    users.push({
+                        team_type: teamName,
+                        name,
+                        email,
+                        username: generateRandomString(8),
+                        password: generateRandomString(12),
+                        role,
+                        organisation: adminOrg,
+                        status: 'enable',
+                        created_at: new Date().toISOString()
+                    });
+                }
+            });
+
+            if (users.length === 0) {
+                alert('No valid data found.');
+                return;
+            }
+
+            try {
+                const { data: insertedData, error } = await supabaseClient
+                    .from('users')
+                    .insert(users)
+                    .select();
+                if (error) throw new Error(`Failed to insert members: ${error.message}`);
+
+                const emailPromises = insertedData.map(user => sendEmail(user.email, user.username, user.password)
+                    .then(() => ({ email: user.email, success: true }))
+                    .catch(err => ({ email: user.email, success: false, error: err.message })));
+                const emailResults = await Promise.all(emailPromises);
+
+                for (const user of insertedData) {
+                    await logAction('add', user.team_type, null, user);
+                }
+
+                const successfulEmails = emailResults.filter(result => result.success).length;
+                const failedEmails = emailResults.filter(result => !result.success);
+                let alertMessage = `${successfulEmails} members added successfully.`;
+                if (failedEmails.length > 0) {
+                    alertMessage += `\nFailed to send emails to: ${failedEmails.map(f => f.email).join(', ')}.`;
+                }
+                alert(alertMessage);
+                populateMemberTable(adminOrg);
+            } catch (err) {
+                alert(`Error: ${err.message}`);
+            }
+        }
+
+        function togglePartiesSubMenu(element) {
+            console.log('Parties clicked');
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => item.classList.remove('active'));
+            element.parentElement.classList.add('active');
+            // No toggling; submenu remains open by default
+        }
+
+        async function showAccounts(element) {
+            const teamContent = document.getElementById('teamContent');
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => item.classList.remove('active'));
+            element.parentElement.classList.add('active');
+
+            const adminUsername = localStorage.getItem('loggedInAdminUsername');
+            if (!adminUsername) {
+                alert('No admin logged in. Please log in first.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            let adminOrg;
+            try {
+                const { orgName } = await getAdminDetails(adminUsername);
+                adminOrg = orgName;
+            } catch (error) {
+                alert(error.message);
+                return;
+            }
+
+            teamContent.innerHTML = `
+                <div class="card-header">
+                    <h5 class="mb-0">Accounts</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <button class="btn btn-primary waves-effect waves-light" onclick="openAddAccountModal('${adminOrg}')">Add Account</button>
+                    </div>
+                    <div class="mb-3">
+                        <input type="text" id="accountsFilter" class="form-control" placeholder="Filter accounts..." onkeyup="filterAccounts()">
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>A/c Code</th>
+                                    <th>Account Name</th>
+                                    <th>Address</th>
+                                    <th>Tax Number</th>
+                                    <th>Email</th>
+                                    <th>Attachments</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="accountsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            await populateAccountsTable(adminOrg);
+        }
+
+        async function populateAccountsTable(adminOrg) {
+            const accountsTableBody = document.getElementById('accountsTableBody');
+            accountsTableBody.innerHTML = '';
+
+            const accountsTableName = await createAccountsTableIfNotExists(adminOrg);
+
+            try {
+                const { data: accountsData, error } = await supabaseClient
+                    .from(accountsTableName)
+                    .select('ac_code, name, address, tax_number, email, attachments');
+                if (error) throw new Error(`Failed to fetch accounts: ${error.message}`);
+
+                if (accountsData && accountsData.length > 0) {
+                    accountsData.forEach(account => {
+                        const row = document.createElement('tr');
+                        row.dataset.acCode = account.ac_code;
+                        row.innerHTML = `
+                            <td>${account.ac_code}</td>
+                            <td>${account.name}</td>
+                            <td>${account.address}</td>
+                            <td>${account.tax_number}</td>
+                            <td>${account.email}</td>
+                            <td>${account.attachments || 'None'}</td>
+                            <td class="action-buttons">
+                                <button class="btn btn-sm btn-primary waves-effect waves-light" onclick="openEditAccountModal('${adminOrg}', '${account.ac_code}')">Edit</button>
+                                <button class="btn btn-sm btn-icon btn-danger waves-effect waves-light" onclick="deleteAccount('${adminOrg}', '${account.ac_code}')"><i class="fas fa-trash"></i></button>
+                            </td>
+                        `;
+                        row.addEventListener('click', (e) => {
+                            if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'I') {
+                                showContactsPopup(adminOrg, account.ac_code);
+                            }
+                        });
+                        accountsTableBody.appendChild(row);
+                    });
+                } else {
+                    accountsTableBody.innerHTML = '<tr><td colspan="7" class="text-center">No accounts found.</td></tr>';
+                }
+            } catch (err) {
+                accountsTableBody.innerHTML = '<tr><td colspan="7" class="text-center">Error loading accounts.</td></tr>';
+            }
+        }
+
+        function filterAccounts() {
+            const filterValue = document.getElementById('accountsFilter').value.toLowerCase();
+            const rows = document.getElementById('accountsTableBody').getElementsByTagName('tr');
+            for (let row of rows) {
+                const cells = row.getElementsByTagName('td');
+                const acCode = cells[0].textContent.toLowerCase();
+                const name = cells[1].textContent.toLowerCase();
+                const address = cells[2].textContent.toLowerCase();
+                const taxNumber = cells[3].textContent.toLowerCase();
+                const email = cells[4].textContent.toLowerCase();
+                const attachments = cells[5].textContent.toLowerCase();
+                row.style.display = (acCode.includes(filterValue) || name.includes(filterValue) || address.includes(filterValue) || taxNumber.includes(filterValue) || email.includes(filterValue) || attachments.includes(filterValue)) ? '' : 'none';
+            }
+        }
+
+        function openAddAccountModal(adminOrg) {
+            document.getElementById('addAccountModal').dataset.org = adminOrg;
+            document.getElementById('accountName').value = '';
+            document.getElementById('accountAddress').value = '';
+            document.getElementById('taxNumber').value = '';
+            document.getElementById('accountEmail').value = '';
+            document.getElementById('accountAttachments').value = '';
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('addAccountModal')).show();
+        }
+
+        async function saveNewAccount() {
+            const name = document.getElementById('accountName').value.trim();
+            const address = document.getElementById('accountAddress').value.trim();
+            const taxNumber = document.getElementById('taxNumber').value.trim();
+            const email = document.getElementById('accountEmail').value.trim();
+            const attachmentsFile = document.getElementById('accountAttachments').files[0];
+            const adminOrg = document.getElementById('addAccountModal').dataset.org;
+
+            if (!name || !address || !taxNumber || !email) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+
+            try {
+                const adminUsername = localStorage.getItem('loggedInAdminUsername');
+                const { orgCode } = await getAdminDetails(adminUsername);
+                const accountsTableName = await createAccountsTableIfNotExists(adminOrg);
+
+                const { data: countData, error: countError } = await supabaseClient
+                    .from(accountsTableName)
+                    .select('ac_code', { count: 'exact' });
+                if (countError) throw new Error(`Failed to count accounts: ${countError.message}`);
+                const serialNumber = String(countData.length + 1).padStart(5, '0');
+                const acCode = `${orgCode}A${serialNumber}`;
+
+                const accountData = {
+                    ac_code: acCode,
+                    name,
+                    address,
+                    tax_number: taxNumber,
+                    email,
+                    attachments: attachmentsFile ? attachmentsFile.name : null,
+                    created_at: new Date().toISOString()
+                };
+
+                const { error: insertError } = await supabaseClient
+                    .from(accountsTableName)
+                    .insert(accountData);
+                if (insertError) throw new Error(`Failed to add account: ${insertError.message}`);
+
+                await logAction('add', null, null, accountData);
+                bootstrap.Modal.getInstance(document.getElementById('addAccountModal')).hide();
+                populateAccountsTable(adminOrg);
+            } catch (err) {
+                alert(`Error: ${err.message}`);
+            }
+        }
+
+        function openEditAccountModal(adminOrg, acCode) {
+            document.getElementById('editAccountModal').dataset.org = adminOrg;
+            document.getElementById('editAccountModal').dataset.acCode = acCode;
+
+            supabaseClient
+                .from(`${adminOrg.toLowerCase().replace(/[^a-z0-9_]/g, '_')}_accounts`)
+                .select('name, address, tax_number, email, attachments')
+                .eq('ac_code', acCode)
+                .single()
+                .then(({ data, error }) => {
+                    if (!error && data) {
+                        document.getElementById('editAccountName').value = data.name;
+                        document.getElementById('editAccountAddress').value = data.address;
+                        document.getElementById('editAccountTaxNumber').value = data.tax_number;
+                        document.getElementById('editAccountEmail').value = data.email;
+                        document.getElementById('editAccountAttachments').value = '';
+                    }
+                });
+
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('editAccountModal')).show();
+        }
+
+        async function saveEditedAccount() {
+            const name = document.getElementById('editAccountName').value.trim();
+            const address = document.getElementById('editAccountAddress').value.trim();
+            const taxNumber = document.getElementById('editAccountTaxNumber').value.trim();
+            const email = document.getElementById('editAccountEmail').value.trim();
+            const attachmentsFile = document.getElementById('editAccountAttachments').files[0];
+            const adminOrg = document.getElementById('editAccountModal').dataset.org;
+            const acCode = document.getElementById('editAccountModal').dataset.acCode;
+
+            if (!name || !address || !taxNumber || !email) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+
+            try {
+                const accountsTableName = `${adminOrg.toLowerCase().replace(/[^a-z0-9_]/g, '_')}_accounts`;
+                const { data: oldData, error: fetchError } = await supabaseClient
+                    .from(accountsTableName)
+                    .select('name, address, tax_number, email, attachments')
+                    .eq('ac_code', acCode)
+                    .single();
+                if (fetchError) throw new Error(`Failed to fetch old account data: ${fetchError.message}`);
+
+                const updatedData = {
+                    name,
+                    address,
+                    tax_number: taxNumber,
+                    email,
+                    attachments: attachmentsFile ? attachmentsFile.name : oldData.attachments
+                };
+
+                const { error } = await supabaseClient
+                    .from(accountsTableName)
+                    .update(updatedData)
+                    .eq('ac_code', acCode);
+                if (error) throw new Error(`Failed to update account: ${error.message}`);
+
+                await logAction('edit', null, oldData, updatedData);
+                bootstrap.Modal.getInstance(document.getElementById('editAccountModal')).hide();
+                populateAccountsTable(adminOrg);
+            } catch (err) {
+                alert(`Error: ${err.message}`);
+            }
+        }
+
+        async function deleteAccount(adminOrg, acCode) {
+            if (!confirm(`Are you sure you want to delete the account with A/c Code ${acCode}?`)) return;
+
+            try {
+                const accountsTableName = `${adminOrg.toLowerCase().replace(/[^a-z0-9_]/g, '_')}_accounts`;
+                const { data: oldData, error: fetchError } = await supabaseClient
+                    .from(accountsTableName)
+                    .select('ac_code, name, address, tax_number, email, attachments')
+                    .eq('ac_code', acCode)
+                    .single();
+                if (fetchError) throw new Error(`Failed to fetch account data: ${fetchError.message}`);
+
+                const { error } = await supabaseClient
+                    .from(accountsTableName)
+                    .delete()
+                    .eq('ac_code', acCode);
+                if (error) throw new Error(`Failed to delete account: ${error.message}`);
+
+                await logAction('delete', null, oldData, null);
+                populateAccountsTable(adminOrg);
+            } catch (err) {
+                alert(`Error: ${err.message}`);
+            }
+        }
+
+        async function showContacts(element) {
+            const teamContent = document.getElementById('teamContent');
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => item.classList.remove('active'));
+            element.parentElement.classList.add('active');
+
+            const adminUsername = localStorage.getItem('loggedInAdminUsername');
+            if (!adminUsername) {
+                alert('No admin logged in. Please log in first.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            let adminOrg;
+            try {
+                const { orgName } = await getAdminDetails(adminUsername);
+                adminOrg = orgName;
+            } catch (error) {
+                alert(error.message);
+                return;
+            }
+
+            teamContent.innerHTML = `
+                <div class="card-header">
+                    <h5 class="mb-0">Contacts</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <button class="btn btn-primary waves-effect waves-light" onclick="openAddContactModal('${adminOrg}')">Add Contact</button>
+                    </div>
+                    <div class="mb-3">
+                        <input type="text" id="contactsFilter" class="form-control" placeholder="Filter contacts..." onkeyup="filterContacts()">
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Contact Code</th>
+                                    <th>Account Name</th>
+                                    <th>Name</th>
+                                    <th>Department</th>
+                                    <th>Email</th>
+                                    <th>Mobile</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="contactsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+
+            await populateContactsTable(adminOrg);
+        }
+
+        async function populateContactsTable(adminOrg) {
+            const contactsTableBody = document.getElementById('contactsTableBody');
+            contactsTableBody.innerHTML = '';
+
+            const contactsTableName = await createNewContactsTableIfNotExists(adminOrg);
+
+            try {
+                const { data: contactsData, error } = await supabaseClient
+                    .from(contactsTableName)
+                    .select('contact_code, ac_name, name, dept, email, mobile');
+                if (error) throw new Error(`Failed to fetch contacts: ${error.message}`);
+
+                if (contactsData && contactsData.length > 0) {
+                    contactsData.forEach(contact => {
+                        const row = document.createElement('tr');
+                        row.dataset.contactCode = contact.contact_code;
+                        row.innerHTML = `
+                            <td>${contact.contact_code}</td>
+                            <td>${contact.ac_name}</td>
+                            <td>${contact.name}</td>
+                            <td>${contact.dept}</td>
+                            <td>${contact.email}</td>
+                            <td>${contact.mobile}</td>
+                            <td class="action-buttons">
+                                <button class="btn btn-sm btn-primary waves-effect waves-light" onclick="openEditContactModal('${adminOrg}', '${contact.contact_code}')">Edit</button>
+                                <button class="btn btn-sm btn-icon btn-danger waves-effect waves-light" onclick="deleteContact('${adminOrg}', '${contact.contact_code}')"><i class="fas fa-trash"></i></button>
+                            </td>
+                        `;
+                        contactsTableBody.appendChild(row);
+                    });
+                } else {
+                    contactsTableBody.innerHTML = '<tr><td colspan="7" class="text-center">No contacts found.</td></tr>';
+                }
+            } catch (err) {
+                contactsTableBody.innerHTML = '<tr><td colspan="7" class="text-center">Error loading contacts.</td></tr>';
+            }
+        }
+
+        function filterContacts() {
+            const filterValue = document.getElementById('contactsFilter').value.toLowerCase();
+            const rows = document.getElementById('contactsTableBody').getElementsByTagName('tr');
+            for (let row of rows) {
+                const cells = row.getElementsByTagName('td');
+                const contactCode = cells[0].textContent.toLowerCase();
+                const acName = cells[1].textContent.toLowerCase();
+                const name = cells[2].textContent.toLowerCase();
+                const dept = cells[3].textContent.toLowerCase();
+                const email = cells[4].textContent.toLowerCase();
+                const mobile = cells[5].textContent.toLowerCase();
+                row.style.display = (contactCode.includes(filterValue) || acName.includes(filterValue) || name.includes(filterValue) || dept.includes(filterValue) || email.includes(filterValue) || mobile.includes(filterValue)) ? '' : 'none';
+            }
+        }
+
+        function openAddContactModal(adminOrg) {
+            document.getElementById('addContactModal').dataset.org = adminOrg;
+            const accountSelect = document.getElementById('contactAccountName');
+            accountSelect.innerHTML = '<option value="">Select Account Name</option>';
+
+            supabaseClient
+                .from(`${adminOrg.toLowerCase().replace(/[^a-z0-9_]/g, '_')}_accounts`)
+                .select('name')
+                .then(({ data, error }) => {
+                    if (!error && data) {
+                        data.forEach(account => {
+                            accountSelect.innerHTML += `<option value="${account.name}">${account.name}</option>`;
+                        });
+                    }
+                });
+
+            document.getElementById('contactName').value = '';
+            document.getElementById('contactDept').value = '';
+            document.getElementById('contactEmail').value = '';
+            document.getElementById('contactMobile').value = '';
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('addContactModal')).show();
+        }
+
+        async function saveNewContact() {
+            const acName = document.getElementById('contactAccountName').value;
+            const name = document.getElementById('contactName').value.trim();
+            const dept = document.getElementById('contactDept').value.trim();
+            const email = document.getElementById('contactEmail').value.trim();
+            const mobile = document.getElementById('contactMobile').value.trim();
+            const adminOrg = document.getElementById('addContactModal').dataset.org;
+
+            if (!acName || !name || !dept || !email || !mobile) {
+                alert('Please fill in all required fields.');
+                return;
+            }
+
+            try {
+                const adminUsername = localStorage.getItem('loggedInAdminUsername');
+                const { orgCode } = await getAdminDetails(adminUsername);
+                const contactsTableName = await createNewContactsTableIfNotExists(adminOrg);
+
+                const { data: accountData, error: accountError } = await supabaseClient
+                    .from(`${adminOrg.toLowerCase().replace(/[^a-z0-9_]/g, '_')}_accounts`)
+                    .select('ac_code')
+                    .eq('name', acName)
+                    .single();
+                                    if (accountError) throw new Error(`Failed to fetch account code: ${accountError.message}`);
+
+const acCodeLastSix = accountData.ac_code.slice(-6); // e.g., "A00001"
+const { data: countData, error: countError } = await supabaseClient
+    .from(contactsTableName)
+    .select('contact_code', { count: 'exact' });
+if (countError) throw new Error(`Failed to count contacts: ${countError.message}`);
+const serialNumber = String(countData.length + 1).padStart(5, '0');
+const contactCode = `${acCodeLastSix}C${serialNumber}`; // e.g., "A00001C00001"
+
+const contactData = {
+    contact_code: contactCode,
+    ac_name: acName,
+    name,
+    dept,
+    email,
+    mobile,
+    created_at: new Date().toISOString()
+};
+
+const { error: insertError } = await supabaseClient
+    .from(contactsTableName)
+    .insert(contactData);
+if (insertError) throw new Error(`Failed to add contact: ${insertError.message}`);
+
+await logAction('add', null, null, contactData);
+bootstrap.Modal.getInstance(document.getElementById('addContactModal')).hide();
+populateContactsTable(adminOrg);
+} catch (err) {
+alert(`Error: ${err.message}`);
+}
+}
+
+function openEditContactModal(adminOrg, contactCode) {
+document.getElementById('editContactModal').dataset.org = adminOrg;
+document.getElementById('editContactModal').dataset.contactCode = contactCode;
+
+const accountSelect = document.getElementById('editContactAccountName');
+accountSelect.innerHTML = '<option value="">Select Account Name</option>';
+
+supabaseClient
+.from(`${adminOrg.toLowerCase().replace(/[^a-z0-9_]/g, '_')}_accounts`)
+.select('name')
+.then(({ data, error }) => {
+    if (!error && data) {
+        data.forEach(account => {
+            accountSelect.innerHTML += `<option value="${account.name}">${account.name}</option>`;
+        });
+    }
+});
+
+supabaseClient
+.from(`${adminOrg.toLowerCase().replace(/[^a-z0-9_]/g, '_')}_contacts`)
+.select('ac_name, name, dept, email, mobile')
+.eq('contact_code', contactCode)
+.single()
+.then(({ data, error }) => {
+    if (!error && data) {
+        document.getElementById('editContactAccountName').value = data.ac_name;
+        document.getElementById('editContactName').value = data.name;
+        document.getElementById('editContactDept').value = data.dept;
+        document.getElementById('editContactEmail').value = data.email;
+        document.getElementById('editContactMobile').value = data.mobile;
+    }
+});
+
+bootstrap.Modal.getOrCreateInstance(document.getElementById('editContactModal')).show();
+}
+
+async function saveEditedContact() {
+const acName = document.getElementById('editContactAccountName').value;
+const name = document.getElementById('editContactName').value.trim();
+const dept = document.getElementById('editContactDept').value.trim();
+const email = document.getElementById('editContactEmail').value.trim();
+const mobile = document.getElementById('editContactMobile').value.trim();
+const adminOrg = document.getElementById('editContactModal').dataset.org;
+const contactCode = document.getElementById('editContactModal').dataset.contactCode;
+
+if (!acName || !name || !dept || !email || !mobile) {
+alert('Please fill in all required fields.');
+return;
+}
+
+try {
+const contactsTableName = `${adminOrg.toLowerCase().replace(/[^a-z0-9_]/g, '_')}_contacts`;
+const { data: oldData, error: fetchError } = await supabaseClient
+    .from(contactsTableName)
+    .select('ac_name, name, dept, email, mobile')
+    .eq('contact_code', contactCode)
+    .single();
+if (fetchError) throw new Error(`Failed to fetch old contact data: ${fetchError.message}`);
+
+const updatedData = {
+    ac_name: acName,
+    name,
+    dept,
+    email,
+    mobile
+};
+
+const { error } = await supabaseClient
+    .from(contactsTableName)
+    .update(updatedData)
+    .eq('contact_code', contactCode);
+if (error) throw new Error(`Failed to update contact: ${error.message}`);
+
+await logAction('edit', null, oldData, updatedData);
+bootstrap.Modal.getInstance(document.getElementById('editContactModal')).hide();
+populateContactsTable(adminOrg);
+} catch (err) {
+alert(`Error: ${err.message}`);
+}
+}
+
+async function deleteContact(adminOrg, contactCode) {
+if (!confirm(`Are you sure you want to delete the contact with Contact Code ${contactCode}?`)) return;
+
+try {
+const contactsTableName = `${adminOrg.toLowerCase().replace(/[^a-z0-9_]/g, '_')}_contacts`;
+const { data: oldData, error: fetchError } = await supabaseClient
+    .from(contactsTableName)
+    .select('contact_code, ac_name, name, dept, email, mobile')
+    .eq('contact_code', contactCode)
+    .single();
+if (fetchError) throw new Error(`Failed to fetch contact data: ${fetchError.message}`);
+
+const { error } = await supabaseClient
+    .from(contactsTableName)
+    .delete()
+    .eq('contact_code', contactCode);
+if (error) throw new Error(`Failed to delete contact: ${error.message}`);
+
+await logAction('delete', null, oldData, null);
+populateContactsTable(adminOrg);
+} catch (err) {
+alert(`Error: ${err.message}`);
+}
+}
+
+async function showContactsPopup(adminOrg, acCode) {
+const modal = document.getElementById('contactsPopupModal');
+const tableBody = document.getElementById('contactsPopupTableBody');
+tableBody.innerHTML = '';
+document.getElementById('contactsPopupModalLabel').textContent = `Contacts for Account: ${acCode}`;
+
+const acCodeLastSix = acCode.slice(-6); // Last 6 characters of ac_code
+const contactsTableName = `${adminOrg.toLowerCase().replace(/[^a-z0-9_]/g, '_')}_contacts`;
+
+console.log('Debugging showContactsPopup:');
+console.log('acCode:', acCode);
+console.log('acCodeLastSix:', acCodeLastSix);
+console.log('contactsTableName:', contactsTableName);
+console.log('Querying contact_code LIKE:', `${acCodeLastSix}%`);
+
+try {
+const { data: contactsData, error } = await supabaseClient
+    .from(contactsTableName)
+    .select('contact_code, name, dept, email, mobile')
+    .ilike('contact_code', `${acCodeLastSix}%`); // Match first 6 characters of contact_code
+if (error) throw new Error(`Failed to fetch contacts: ${error.message}`);
+
+console.log('Contacts Data:', contactsData);
+
+if (contactsData && contactsData.length > 0) {
+    contactsData.forEach(contact => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${contact.name}</td>
+            <td>${contact.dept}</td>
+            <td>${contact.email}</td>
+            <td>${contact.mobile}</td>
+        `;
+        tableBody.appendChild(row);
+    });
+} else {
+    tableBody.innerHTML = '<tr><td colspan="4" class="text-center">No contacts found for this account.</td></tr>';
+    console.log('No matching contacts found.');
+}
+} catch (err) {
+tableBody.innerHTML = '<tr><td colspan="4" class="text-center">Error loading contacts: ${err.message}</td></tr>';
+console.error('Error in showContactsPopup:', err);
+}
+
+bootstrap.Modal.getOrCreateInstance(modal).show();
+}
+
+// Start the app
+waitForSupabase();
+</script>
+</body>
+</html>

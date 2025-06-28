@@ -1,0 +1,2495 @@
+<!DOCTYPE html>
+<html lang="en" class="light-style layout-menu-fixed" dir="ltr" data-theme="theme-default" data-assets-path="vuexy-bootstrap-html-admin-template/full-version/dist/" data-template="vertical-menu-template">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accordwise</title>
+    <!-- Core CSS (Vuexy/bootstrap 5) -->
+    <link rel="stylesheet" href="vuexy-bootstrap-html-admin-template/full-version/dist/css/core.css">
+    <!-- Vendors CSS -->
+    <link rel="stylesheet" href="vuexy-bootstrap-html-admin-template/full-version/dist/libs/perfect-scrollbar/perfect-scrollbar.css">
+    <link rel="stylesheet" href="vuexy-bootstrap-html-admin-template/full-version/dist/libs/node-waves/node-waves.css">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="vuexy-bootstrap-html-admin-template/full-version/dist/fonts/fontawesome.css">
+    <!-- Suppress favicon error -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <link rel="icon" href="data:,">
+    <style>
+        .editor-container {
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            padding: 10px;
+            min-height: 300px;
+            width: 100%;
+            height: 500px; /* Adjust height for OnlyOffice */
+        }
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .action-btn {
+            padding: 4px 8px;
+        }
+        .btn-outline-primary { background-color: rgba(13, 110, 253, 0.1); }
+        .btn-outline-success { background-color: rgba(25, 135, 84, 0.1); }
+        .btn-outline-info { background-color: rgba(13, 202, 240, 0.1); }
+        .btn-outline-danger { background-color: rgba(220, 53, 69, 0.1); }
+        #contentArea { position: relative; min-height: 500px; }
+        .editor-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; padding: 10px; box-sizing: border-box; background: white; }
+        .editor-wrapper { width: 100%; height: calc(100% - 50px); margin-top: 50px; }
+        .editor-btns { position: absolute; top: 10px; right: 10px; z-index: 10; display: flex; gap: 10px; }
+        .action-buttons { display: flex; flex-direction: column; gap: 5px; }
+        .action-btn { padding: 4px 8px; }
+        .btn-outline-primary { background-color: rgba(13, 110, 253, 0.1); }
+        .btn-outline-success { background-color: rgba(25, 135, 84, 0.1); }
+        .btn-outline-info { background-color: rgba(13, 202, 240, 0.1); }
+        .btn-outline-danger { background-color: rgba(220, 53, 69, 0.1); }
+        .modal-dialog { max-width: 90%; }
+        #templatesContent.hidden { display: none; }
+        .menu-sub {
+    display: none; /* Hidden by default */
+}
+/* Modal Popup Styles */
+.pdf-editor-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+}
+
+.pdf-editor-content {
+    background-color: white;
+    width: 90%;
+    max-width: 1000px;
+    height: 80%;
+    border-radius: 8px;
+    padding: 20px;
+    position: relative;
+    overflow: auto;
+}
+
+.pdf-editor-content .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    cursor: pointer;
+    background: none;
+    border: none;
+}
+
+#pdf-viewer-container {
+    position: relative;
+    width: 100%;
+    height: calc(100% - 60px); /* Adjust for controls */
+    overflow: auto;
+}
+
+#pdf-controls {
+    margin-bottom: 10px;
+}
+
+#pdf-controls button {
+    margin-right: 10px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#pdf-controls button:hover {
+    opacity: 0.9;
+}
+
+#render-canvas {
+    border: 1px solid #ccc;
+}
+
+#fabric-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1001;
+}
+.menu-item.active .menu-sub {
+    display: block; /* Shown when parent is active */
+}
+
+        .menu-sub {
+    display: none; /* Hidden by default */
+}
+#myApprovalsLink + .menu-sub {
+    display: block !important; /* Always show My Approvals submenu */
+}
+#contractsLink + .menu-sub {
+    display: block !important; /* Always show Contracts submenu */
+} 
+.menu-sub.show {
+    display: block !important; /* Always shown when 'show' class is present */
+}
+.approval-container, .signature-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: relative;
+}
+
+.approval-box, .signature-box {
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    cursor: move;
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.approval-box.dragging, .signature-box.dragging {
+    opacity: 0.5;
+    transform: scale(0.98);
+}
+
+.member-entry, .approval-entry {
+    margin-bottom: 10px;
+}
+
+hr.my-4 {
+    border: 1px solid #ccc;
+    margin: 20px 0;
+}
+
+#main-content {
+    position: relative;
+}
+
+#pdf-editor {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+#pdf-controls {
+    margin-bottom: 10px;
+}
+
+#pdf-viewer {
+    position: relative;
+    width: 100%;
+    border: 1px solid #ccc;
+}
+
+#fabric-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: 1px solid #000;
+}
+/* Calendar Styles */
+/* Calendar and Side Panel Container */
+.calendar-container {
+    max-width: 100%;
+    margin: 0 auto;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+/* Calendar Styles */
+.fc {
+    font-size: 14px;
+    flex: 1;
+    min-width: 600px;
+}
+.fc-daygrid-day.fc-day-highlighted {
+    position: relative;
+    background: linear-gradient(135deg, rgba(var(--bs-primary-rgb), 0.15), rgba(var(--bs-primary-rgb), 0.05)) !important; /* Subtle primary gradient */
+    border: 2px solid var(--bs-primary) !important; /* Primary blue border */
+    border-radius: var(--bs-border-radius); /* Match card border-radius */
+    box-shadow: var(--bs-box-shadow-sm) !important; /* Subtle shadow */
+}
+.fc-daygrid-day.fc-day-highlighted::before {
+    content: '!';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 14px;
+    height: 14px;
+    background-color: var(--bs-danger); /* Red badge for urgency */
+    color: var(--bs-white);
+    border-radius: 50%;
+    font-size: 9px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.fc-daygrid-day.fc-day-highlighted .fc-daygrid-day-number {
+    color: var(--bs-primary); /* Primary blue text */
+    font-weight: bold; /* Bootstrap fw-bold */
+}
+
+/* Event (Contract Title) Styles */
+.fc-event {
+    cursor: pointer;
+    background-color: var(--bs-primary); /* Bootstrap primary blue */
+    color: var(--bs-white) !important;
+    padding: 4px 10px; /* Comfortable padding */
+    border-radius: 1rem; /* Bootstrap rounded-pill */
+    font-size: 0.875rem; /* Bootstrap fs-6 */
+    font-weight: 500; /* Bootstrap fw-medium */
+    box-shadow: var(--bs-box-shadow-sm); /* Subtle shadow */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90%; /* Prevent overflow */
+    transition: background-color 0.2s ease, box-shadow 0.2s ease; /* Smooth hover */
+}
+.fc-event:hover {
+    background-color: #0056b3; /* Darker primary shade */
+    box-shadow: var(--bs-box-shadow); /* Slightly larger shadow */
+}
+
+/* Side Panel Styles */
+.side-panel {
+    flex: 0 0 400px;
+    background: var(--bs-white);
+    box-shadow: var(--bs-box-shadow);
+    padding: 20px;
+    border-radius: var(--bs-border-radius);
+    display: none;
+    position: relative;
+}
+.side-panel.open {
+    display: block;
+}
+.side-panel .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: var(--bs-dark);
+}
+.side-panel .close-btn:hover {
+    color: var(--bs-primary);
+}
+.side-panel h5 {
+    margin-bottom: 20px;
+}
+.side-panel .contract-details p {
+    margin: 10px 0;
+}
+
+/* Tab Styles (unchanged) */
+.nav-tabs .nav-link {
+    cursor: pointer;
+}
+.tab-content {
+    padding: 20px;
+}
+.accounts-tab, .all-accounts-tab {
+    margin-top: 20px;
+}
+.accounts-table {
+    margin-top: 20px;
+}
+
+    </style>
+</head>
+<body>
+    <!-- Layout Wrapper -->
+    <div class="layout-wrapper layout-content-navbar">
+        <div class="layout-container">
+            <!-- Sidebar (Menu) -->
+            <aside id="sidebar" class="layout-menu menu-vertical menu bg-menu-theme">
+                <div class="app-brand p-3">
+                    <a href="#" class="app-brand-link">
+                        <span class="app-brand-text demo menu-text fw-bold ms-2">Accordwise</span>
+                    </a>
+                    <a href="javascript:void(0);" id="closeSidebar" class="layout-menu-toggle menu-link text-large ms-auto">
+                        <i class="fas fa-times menu-toggle-icon"></i>
+                    </a>
+                </div>
+                <div class="menu-inner-shadow"></div>
+                <ul class="menu-inner py-1">
+                    <li class="menu-item active">
+                        <a href="#" class="menu-link" id="templatesLink">
+                            <i class="menu-icon tf-icons fas fa-table"></i>
+                            <div>Templates</div>
+                        </a>
+                    </li>
+                    <li class="menu-item">
+                        <a href="#" class="menu-link menu-toggle" id="myApprovalsLink">
+                            <i class="menu-icon tf-icons fas fa-check-circle"></i>
+                            <div>My Approvals</div>
+                        </a>
+                        <ul class="menu-sub">
+                            <li class="menu-item">
+                                <a href="#" class="menu-link" id="reviewersLink">
+                                    <div>Reviewers</div>
+                                </a>
+                            </li>
+                            <li class="menu-item">
+                                <a href="#" class="menu-link" id="signaturesLink">
+                                    <div>Signatures</div>
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </aside>
+
+            <!-- Layout Page -->
+            <div id="mainContent" class="layout-page">
+                <!-- Navbar (Top Bar) -->
+                <nav class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme" id="layout-navbar">
+                    <div class="navbar-nav-right d-flex align-items-center">
+                        <button id="openSidebar" class="btn btn-icon me-2 d-xl-none">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <ul class="navbar-nav flex-row align-items-center ms-auto">
+                            <li class="nav-item">
+                                <a class="nav-link" href="javascript:void(0)">
+                                    <i class="fas fa-cog"></i>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="javascript:void(0)">
+                                    <i class="fas fa-user-circle"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+
+                <!-- Content Wrapper -->
+                <div class="content-wrapper">
+                    <div class="container-xxl flex-grow-1 container-p-y" id="contentArea">
+                        <!-- Templates Table -->
+                        <div id="templatesContent">
+                            <div class="mb-3">
+                                <input type="text" class="form-control" id="templateFilter" placeholder="Filter by template name...">
+                            </div>
+                            <div class="card">
+                                <div class="card-header">Templates</div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Template Name</th>
+                                                    <th>Version</th>
+                                                    <th>Last Updated On</th>
+                                                    <th>Status</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="templatesTableBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="fullScreenEditor" class="editor-container" style="display: none;">
+                            <div id="editorButtons" class="editor-btns"></div>
+                            <div id="editorWrapper" class="editor-wrapper"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core JS Files -->
+    <script src="vuexy-bootstrap-html-admin-template/full-version/dist/libs/popper/popper.js"></script>
+    <script src="vuexy-bootstrap-html-admin-template/full-version/dist/js/bootstrap.js"></script>
+    <script src="vuexy-bootstrap-html-admin-template/full-version/dist/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+
+    <!-- Dependency Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script type="text/javascript" src="http://192.168.133.37/web-apps/apps/api/documents/api.js"></script>
+    <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
+    <script src="https://unpkg.com/mammoth@1.4.2/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <!-- Application Logic -->
+    <script>
+        let supabaseClient;
+        let createEditor = null;
+
+        const jwt = {
+    sign: function(payload, secret) {
+        const header = { alg: 'HS256', typ: 'JWT' };
+        const base64UrlEncode = (str) => btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        const encodedHeader = base64UrlEncode(JSON.stringify(header));
+        const encodedPayload = base64UrlEncode(JSON.stringify(payload));
+        const signature = CryptoJS.HmacSHA256(`${encodedHeader}.${encodedPayload}`, secret).toString(CryptoJS.enc.Base64url);
+        return `${encodedHeader}.${encodedPayload}.${signature}`;
+    }
+};
+
+        function waitForDependencies() {
+            console.log('Checking dependencies - Supabase:', typeof supabase !== 'undefined', 'DocsAPI:', typeof DocsAPI !== 'undefined', 'CryptoJS:', typeof CryptoJS !== 'undefined');
+    if (typeof supabase !== 'undefined' && typeof DocsAPI !== 'undefined' && typeof CryptoJS !== 'undefined') {
+        console.log('All dependencies loaded, initializing app');
+        initializeApp();
+    } else {
+        console.log('Waiting for dependencies...');
+        setTimeout(waitForDependencies, 100);
+    }
+}
+
+
+        async function initializeApp() {
+    console.log('Starting app initialization');
+    const supabaseUrl = '***REMOVED***';
+    const supabaseKey = '***REMOVED***';
+    supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, {
+        fetch: (...args) => fetch(...args, { headers: { 'Accept': 'application/json' } })
+    });
+    console.log('Supabase client initialized');
+
+    const currentUserUsername = localStorage.getItem('loggedInAdminUsername');
+    const userRole = localStorage.getItem('loggedInRole');
+    console.log('Logged in user:', { username: currentUserUsername, role: userRole });
+    if (!currentUserUsername || !userRole) {
+        alert('Please log in first!');
+        window.location.href = 'login.html';
+        return;
+    }
+
+    const { data: userData, error: userError } = await supabaseClient
+        .from('users')
+        .select('organisation')
+        .eq('username', currentUserUsername)
+        .single();
+    console.log('User data fetch result:', { data: userData, error: userError });
+    if (userError || !userData) {
+        alert('Error fetching user organization.');
+        console.error('User fetch error:', userError);
+        return;
+    }
+    const organisationname = userData.organisation;
+            localStorage.setItem('loggedInOrganisationName', organisationname);
+            const organisationName = userData.organisation.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+            const templatesTableName = `${organisationName}_templates`;
+            const documentsTableName = organisationName;
+            console.log('Derived table names:', { templatesTableName, documentsTableName });
+
+    const sidebar = document.getElementById('sidebar');
+    document.getElementById('openSidebar').onclick = function() { sidebar.classList.remove('layout-menu-hidden'); };
+    document.getElementById('closeSidebar').onclick = function() { sidebar.classList.add('layout-menu-hidden'); };
+
+    fetchTemplates(templatesTableName);
+
+    document.getElementById('templateFilter').addEventListener('input', function() {
+        const filterValue = this.value.toLowerCase();
+        filterTemplates(templatesTableName, filterValue);
+    });
+
+    document.getElementById('templatesLink').addEventListener('click', function(e) {
+        e.preventDefault();
+        fetchTemplates(templatesTableName);
+    });
+
+    document.getElementById('reviewersLink').addEventListener('click', function(e) {
+        e.preventDefault();
+        showReviewers(this);
+    });
+
+    document.getElementById('signaturesLink').addEventListener('click', function(e) {
+        e.preventDefault();
+        showSignatures(this);
+    });
+}
+
+        async function fetchTemplates(tableName) {
+            console.log('Fetching templates from table:', tableName);
+            try {
+                const { data, error } = await supabaseClient
+                    .from(tableName)
+                    .select('template_id, template_name, version, last_updated_on, status, storage_path')
+                    .eq('status_del', 1)
+                    .eq('status', 'published')
+                    .order('last_updated_on', { ascending: false });
+                console.log('Fetch templates result:', { data, error });
+                if (error) throw new Error(`Failed to fetch templates: ${error.message}`);
+                renderTemplates(data, tableName);
+            } catch (err) {
+                console.error('Error fetching templates:', err);
+                alert(`Error: ${err.message}`);
+            }
+        }
+
+        async function filterTemplates(tableName, filterValue) {
+            console.log('Filtering templates:', { tableName, filterValue });
+            try {
+                const { data, error } = await supabaseClient
+                    .from(tableName)
+                    .select('template_id, template_name, version, last_updated_on, status, storage_path')
+                    .eq('status_del', 1)
+                    .eq('status', 'published')
+                    .ilike('template_name', `%${filterValue}%`)
+                    .order('last_updated_on', { ascending: false });
+                console.log('Filter templates result:', { data, error });
+                if (error) throw new Error(`Failed to filter templates: ${error.message}`);
+                renderTemplates(data, tableName);
+            } catch (err) {
+                console.error('Error filtering templates:', err);
+                alert(`Error: ${err.message}`);
+            }
+        }
+
+        async function downloadFile(storagePath, fileName) {
+            console.log('Downloading file:', { storagePath, fileName });
+            try {
+                const url = `http://localhost:3000/get-file?filePath=${encodeURIComponent(storagePath)}`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`Failed to fetch file: ${await response.text()}`);
+                const { content: base64Content } = await response.json();
+                const blob = base64ToBlob(base64Content, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                console.log('File downloaded successfully');
+            } catch (err) {
+                console.error('Error downloading file:', err);
+                alert(`Error: ${err.message}`);
+            }
+        }
+
+        function renderTemplates(data, tableName) {
+            console.log('Rendering templates for table:', tableName, 'Data:', data);
+            const tbody = document.getElementById('templatesTableBody');
+            tbody.innerHTML = '';
+            if (data && data.length > 0) {
+                data.forEach(template => {
+                    const row = document.createElement('tr');
+                    const statusBadgeClass = 'badge bg-label-success'; // Always published
+                    row.innerHTML = `
+                        <td>${template.template_name}</td>
+                        <td>${template.version}</td>
+                        <td>${new Date(template.last_updated_on).toLocaleString()}</td>
+                        <td><span class="${statusBadgeClass}">${template.status}</span></td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-success download-btn" 
+                                    data-storage-path="${template.storage_path}" 
+                                    title="Download">
+                                <i class="fas fa-download"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+
+                    row.querySelector('.download-btn').addEventListener('click', () => {
+                        const storagePath = row.querySelector('.download-btn').dataset.storagePath;
+                        downloadFile(storagePath, `${template.template_name}_${template.version}.docx`);
+                    });
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No published templates found.</td></tr>';
+            }
+        }
+
+        function base64ToBlob(base64, mimeType) {
+            const byteCharacters = atob(base64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            return new Blob([new Uint8Array(byteNumbers)], { type: mimeType });
+        }
+        async function showReviewers(element) {
+    const menuItems = document.querySelectorAll('.menu-item');
+    menuItems.forEach(item => item.classList.remove('active'));
+    element.parentElement.classList.add('active');
+    const myApprovalsMenu = document.getElementById('myApprovalsLink').parentElement;
+    myApprovalsMenu.classList.add('active');
+    const submenu = myApprovalsMenu.querySelector('.menu-sub');
+    submenu.style.display = 'block';
+
+    const templatesContent = document.getElementById('templatesContent');
+    const editorContainer = document.getElementById('fullScreenEditor');
+
+    if (!editorContainer) {
+        console.error('fullScreenEditor element not found in DOM');
+        templatesContent.innerHTML = `<div class="card"><div class="card-body">Error: Editor container not found</div></div>`;
+        return;
+    }
+    editorContainer.style.display = 'none';
+    templatesContent.classList.remove('hidden');
+
+    const organisationName = localStorage.getItem('loggedInOrganisationName');
+    const loggedInUsername = localStorage.getItem('loggedInAdminUsername');
+    if (!organisationName || !loggedInUsername) {
+        alert('No user logged in. Please log in first.');
+        window.location.href = 'login.html';
+        return;
+    }
+
+    try {
+        // Fetch user details
+        const { data: userData, error: userError } = await supabaseClient
+            .from('users')
+            .select('team_type, role, email, organisation')
+            .eq('username', loggedInUsername)
+            .eq('organisation', organisationName)
+            .single();
+        if (userError || !userData) {
+            throw new Error(`Failed to fetch user details: ${userError?.message || 'No user found'}`);
+        }
+        const { team_type, role, email } = userData;
+        const isLegalOrFinancial = team_type === 'Legal Team' || team_type === 'Finance Team';
+
+        templatesContent.innerHTML = `
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Reviewers</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-tabs" id="reviewersTabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="contract-creation-tab" data-bs-toggle="tab" href="#contract-creation" role="tab">Contract Creation</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="contract-modification-tab" data-bs-toggle="tab" href="#contract-modification" role="tab">Contract Modification</a>
+                        </li>
+                        ${isLegalOrFinancial ? `
+                        <li class="nav-item">
+                            <a class="nav-link" id="contract-cancellation-tab" data-bs-toggle="tab" href="#contract-cancellation" role="tab">Contract Cancellation</a>
+                        </li>
+                        ` : ''}
+                    </ul>
+                    <div class="tab-content" id="reviewersTabContent">
+                        <div class="tab-pane fade show active" id="contract-creation" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Agreement Title</th>
+                                            <th>Requested By</th>
+                                            <th>Account Name</th>
+                                            <th>Created On</th>
+                                            <th>Updated On</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="reviewersTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="contract-modification" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Agreement Title</th>
+                                            <th>Requested By</th>
+                                            <th>Account Name</th>
+                                            <th>Created On</th>
+                                            <th>Updated On</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="modificationTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        ${isLegalOrFinancial ? `
+                        <div class="tab-pane fade" id="contract-cancellation" role="tabpanel">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Agreement Title</th>
+                                            <th>Requested By</th>
+                                            <th>Account Name</th>
+                                            <th>Created On</th>
+                                            <th>Updated On</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cancellationTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        await populateReviewersTable(organisationName, team_type, role, email, isLegalOrFinancial);
+    } catch (err) {
+        console.error('Error in showReviewers:', err);
+        templatesContent.innerHTML = `<div class="card"><div class="card-body">Error: ${err.message}</div></div>`;
+    }
+}
+
+/* New function to populate both tabs */
+async function populateReviewersTable(organisationName, teamType, role, email, isLegalOrFinancial) {
+    const contractsTableName = `${organisationName.toLowerCase().replace(/[^a-z0-9_]/g, '_')}_contracts`;
+    const metadataTableName = `${organisationName.toLowerCase().replace(/[^a-z0-9_]/g, '_')}_metadatacontract`;
+    const cancellationTableName = `${organisationName.toLowerCase().replace(/[^a-z0-9_]/g, '_')}_contractcancellation`;
+    const creationTbody = document.getElementById('reviewersTableBody');
+    const modificationTbody = document.getElementById('modificationTableBody');
+    let cancellationTbody = null;
+    if (isLegalOrFinancial) {
+        cancellationTbody = document.getElementById('cancellationTableBody');
+    }
+
+    try {
+        // Fetch contracts for Contract Creation tab
+        const { data: creationContracts, error: creationError } = await supabaseClient
+            .from(contractsTableName)
+            .select('id, cid, title, requested_by, accountname, createdon, updatedon, storage_path, iapprovedby, approved_email, team')
+            .eq('stage', 'Under Review – Internal')
+            .eq('status', 'In Progress')
+            .eq('valid', 'Pending')
+            .eq('team', teamType);
+        if (creationError) {
+            throw new Error(`Failed to fetch creation contracts: ${creationError.message}`);
+        }
+
+        // Filter contracts based on iapprovedby conditions
+        const filteredCreationContracts = creationContracts.filter(contract => {
+            if (contract.team !== teamType) return false;
+            if (contract.iapprovedby === 'Team Head') {
+                return role === 'head';
+            } else if (contract.iapprovedby === 'Any Team Member') {
+                return true;
+            } else if (contract.iapprovedby === 'Specific Team Member') {
+                return contract.approved_email === email;
+            }
+            return false;
+        });
+
+        // Render filtered contracts for Contract Creation tab
+        creationTbody.innerHTML = '';
+        if (filteredCreationContracts.length > 0) {
+            filteredCreationContracts.forEach(contract => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${contract.title}</td>
+                    <td>${contract.requested_by}</td>
+                    <td>${contract.accountname}</td>
+                    <td>${new Date(contract.createdon).toLocaleString()}</td>
+                    <td>${new Date(contract.updatedon).toLocaleString()}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary review-btn" 
+                                data-id="${contract.id}"
+                                data-cid="${contract.cid}" 
+                                data-storage-path="${contract.storage_path}" 
+                                data-title="${contract.title}">
+                            Review
+                        </button>
+                    </td>
+                `;
+                creationTbody.appendChild(row);
+
+                row.querySelector('.review-btn').addEventListener('click', () => {
+                    openReviewDocument(contract.id, contract.cid, contract.storage_path, contract.title, contractsTableName);
+                });
+            });
+        } else {
+            creationTbody.innerHTML = '<tr><td colspan="6" class="text-center">No contracts to review.</td></tr>';
+        }
+        // Fetch contracts for Contract Modification tab
+        const { data: modificationContracts, error: modificationError } = await supabaseClient
+            .from(contractsTableName)
+            .select('id, cid, title, requested_by, accountname, createdon, updatedon, new_storage_path, iapprovedby, approved_email, team')
+            .eq('stage', 'Extension Draft - Internal Approval')
+            .eq('status', 'In Progress')
+            .eq('valid', 'Pending')
+            .eq('team', teamType);
+        if (modificationError) {
+            throw new Error(`Failed to fetch modification contracts: ${modificationError.message}`);
+        }
+
+        // Filter contracts for Contract Modification tab
+        const filteredModificationContracts = modificationContracts.filter(contract => {
+            if (contract.team !== teamType) return false;
+            if (contract.iapprovedby === 'Team Head') {
+                return role === 'head';
+            } else if (contract.iapprovedby === 'Any Team Member') {
+                return true;
+            } else if (contract.iapprovedby === 'Specific Team Member') {
+                return contract.approved_email === email;
+            }
+            return false;
+        });
+
+        // Render contracts for Contract Modification tab
+        modificationTbody.innerHTML = '';
+        if (filteredModificationContracts.length > 0) {
+            filteredModificationContracts.forEach(contract => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${contract.title}</td>
+                    <td>${contract.requested_by}</td>
+                    <td>${contract.accountname}</td>
+                    <td>${new Date(contract.createdon).toLocaleString()}</td>
+                    <td>${new Date(contract.updatedon).toLocaleString()}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary review-btn" 
+                                data-id="${contract.id}"
+                                data-cid="${contract.cid}" 
+                                data-storage-path="${contract.new_storage_path}" 
+                                data-title="${contract.title}">
+                            Review
+                        </button>
+                    </td>
+                `;
+                modificationTbody.appendChild(row);
+
+                row.querySelector('.review-btn').addEventListener('click', () => {
+                    openModificationReviewDocument(
+                        contract.id,
+                        contract.cid,
+                        contract.new_storage_path,
+                        contract.title,
+                        contractsTableName
+                    );
+                });
+            });
+        } else {
+            modificationTbody.innerHTML = '<tr><td colspan="6" class="text-center">No contract modifications to review.</td></tr>';
+        }
+
+        if (isLegalOrFinancial && cancellationTbody) {
+            // Fetch unique contracts by cid for Cancellation Initiated to Finance Team
+            const { data: cancellationContracts, error: cancellationError } = await supabaseClient
+                .from(contractsTableName)
+                .select('id, cid, title, requested_by, accountname, createdon, updatedon, storage_path, iapprovedby, approved_email, requested_team')
+                .eq('stage', 'Cancellation Initiated to Finance Team')
+                .eq('status', 'Cancellation Initiated to Finance Team')
+                .order('createdon', { ascending: false });
+
+            if (cancellationError) {
+                throw new Error(`Failed to fetch cancellation contracts: ${cancellationError.message}`);
+            }
+
+            // Filter contracts based on iapprovedby conditions and ensure unique cids
+            const uniqueCids = new Set();
+            const filteredCancellationContracts = cancellationContracts.filter(contract => {
+                if (uniqueCids.has(contract.cid)) return false; // Skip if cid already processed
+                uniqueCids.add(contract.cid);
+                return true; // Include all contracts, no iapprovedby filtering
+            });
+
+            // Render filtered contracts for Contract Cancellation tab
+            cancellationTbody.innerHTML = '';
+            if (filteredCancellationContracts.length > 0) {
+                filteredCancellationContracts.forEach(contract => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${contract.title}</td>
+                        <td>${contract.requested_by}</td>
+                        <td>${contract.accountname}</td>
+                        <td>${new Date(contract.createdon).toLocaleString()}</td>
+                        <td>${new Date(contract.updatedon).toLocaleString()}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger initiate-cancellation-btn" 
+                                    data-id="${contract.id}"
+                                    data-cid="${contract.cid}" 
+                                    data-storage-path="${contract.storage_path}" 
+                                    data-title="${contract.title}">
+                                Initiate Cancellation
+                            </button>
+                        </td>
+                    `;
+                    cancellationTbody.appendChild(row);
+
+                    row.querySelector('.initiate-cancellation-btn').addEventListener('click', async () => {
+                        // Fetch termination conditions from metadata table
+                        const { data: metadata, error: metadataError } = await supabaseClient
+                            .from(metadataTableName)
+                            .select('terminationconditions')
+                            .eq('cid', contract.cid)
+                            .single();
+
+                        if (metadataError) {
+                            console.error('Error fetching termination conditions:', metadataError);
+                            alert('Failed to fetch termination conditions.');
+                            return;
+                        }
+
+                        // Create cancellation popup
+                        const popup = document.createElement('div');
+                        popup.className = 'modal fade show';
+                        popup.style.display = 'block';
+                        popup.innerHTML = `
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Initiate Cancellation: ${contract.title}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label"><strong>Cancellation Terms</strong></label>
+                                            <p>${metadata.terminationconditions || 'No termination conditions specified.'}</p>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="cancellationRemarks" class="form-label">Remarks</label>
+                                            <textarea class="form-control" id="cancellationRemarks" rows="4" placeholder="Enter your remarks"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" id="historyBtn">History</button>
+                                        <button type="button" class="btn btn-primary" id="submitCancellationBtn">Submit</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        document.body.appendChild(popup);
+
+                        // Close cancellation popup
+                        popup.querySelector('.btn-close').addEventListener('click', () => {
+                            popup.remove();
+                        });
+
+                        // History button: Open history popup
+                        popup.querySelector('#historyBtn').addEventListener('click', async () => {
+                            try {
+                                // Fetch cancellation history
+                                const { data: historyData, error: historyError } = await supabaseClient
+                                    .from(cancellationTableName)
+                                    .select('initiator_name, initiator_team, remark')
+                                    .eq('cid', contract.cid);
+
+                                if (historyError) {
+                                    throw new Error(`Failed to fetch cancellation history: ${historyError.message}`);
+                                }
+
+                                // Create history popup
+                                const historyPopup = document.createElement('div');
+                                historyPopup.className = 'modal fade show';
+                                historyPopup.style.display = 'block';
+                                historyPopup.innerHTML = `
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Cancellation History: ${contract.title}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <table class="table table-bordered">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Initiator Name</th>
+                                                            <th>Initiator Team</th>
+                                                            <th>Remarks</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="historyTableBody">
+                                                        ${historyData && historyData.length > 0
+                                                            ? historyData.map(row => `
+                                                                <tr>
+                                                                    <td>${row.initiator_name || 'N/A'}</td>
+                                                                    <td>${row.initiator_team || 'N/A'}</td>
+                                                                    <td>${row.remark || 'No remarks'}</td>
+                                                                </tr>
+                                                            `).join('')
+                                                            : '<tr><td colspan="3" class="text-center">No history found.</td></tr>'
+                                                        }
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" id="closeHistoryBtn">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                                document.body.appendChild(historyPopup);
+
+                                // Close history popup
+                                historyPopup.querySelector('#closeHistoryBtn').addEventListener('click', () => {
+                                    historyPopup.remove();
+                                });
+                                historyPopup.querySelector('.btn-close').addEventListener('click', () => {
+                                    historyPopup.remove();
+                                });
+                            } catch (err) {
+                                console.error('Error loading cancellation history:', err);
+                                alert(`Error: ${err.message}`);
+                            }
+                        });
+
+                        // Submit cancellation
+                        popup.querySelector('#submitCancellationBtn').addEventListener('click', async () => {
+                            const remarks = popup.querySelector('#cancellationRemarks').value.trim();
+                            if (!remarks) {
+                                alert('Please provide remarks for cancellation.');
+                                return;
+                            }
+
+                            try {
+                                // Fetch contract details (title, requested_by, requested_team)
+                                const { data: contractData, error: contractError } = await supabaseClient
+                                    .from(contractsTableName)
+                                    .select('title, requested_by, requested_team')
+                                    .eq('cid', contract.cid)
+                                    .limit(1)
+                                    .single();
+
+                                if (contractError) {
+                                    throw new Error(`Failed to fetch contract details: ${contractError.message}`);
+                                }
+
+                                // Fetch initiator details from users table
+                                const loggedInUsername = localStorage.getItem('loggedInAdminUsername');
+                                if (!loggedInUsername) {
+                                    throw new Error('No logged-in user found in localStorage');
+                                }
+
+                                const { data: userData, error: userError } = await supabaseClient
+                                    .from('users')
+                                    .select('name, team_type')
+                                    .eq('username', loggedInUsername)
+                                    .single();
+
+                                if (userError) {
+                                    throw new Error(`Failed to fetch user details: ${userError.message}`);
+                                }
+
+                                // Update all rows with matching cid
+                                const { error: updateError } = await supabaseClient
+                                    .from(contractsTableName)
+                                    .update({
+                                        stage: 'Cancellation Initiated to Legal Team',
+                                        status: 'Cancellation Initiated to Legal Team',
+                                        updatedon: new Date().toISOString()
+                                    })
+                                    .eq('cid', contract.cid);
+
+                                if (updateError) {
+                                    throw new Error(`Failed to update contract status: ${updateError.message}`);
+                                }
+
+                                // Insert into cancellation table
+                                const { error: insertError } = await supabaseClient
+                                    .from(cancellationTableName)
+                                    .insert({
+                                        cid: contract.cid,
+                                        contracttitle: contractData.title,
+                                        requested_by: contractData.requested_by,
+                                        requested_team: contractData.requested_team,
+                                        initiator_name: userData.name,
+                                        initiator_team: userData.team_type,
+                                        remark: remarks,
+                                        subject: null,
+                                        body: null,
+                                        storage_path: null,
+                                        timestamp: new Date().toISOString()
+                                    });
+
+                                if (insertError) {
+                                    throw new Error(`Failed to insert cancellation record: ${insertError.message}`);
+                                }
+
+                                alert('Cancellation initiated successfully.');
+                                popup.remove();
+                                // Refresh the table
+                                await populateReviewersTable(organisationName, teamType, role, email, isLegalOrFinancial);
+                            } catch (err) {
+                                console.error('Error initiating cancellation:', err);
+                                alert(`Error: ${err.message}`);
+                            }
+                        });
+                    });
+                });
+            } else {
+                cancellationTbody.innerHTML = '<tr><td colspan="6" class="text-center">No contracts pending cancellation initiation.</td></tr>';
+            }
+        }
+    } catch (err) {
+        console.error('Error populating reviewers table:', err);
+        creationTbody.innerHTML = `<tr><td colspan="6" class="text-center">Error: ${err.message}</td></tr>`;
+        if (isLegalOrFinancial && cancellationTbody) {
+            cancellationTbody.innerHTML = `<tr><td colspan="6" class="text-center">Error: ${err.message}</td></tr>`;
+        }
+    }
+}
+async function openModificationReviewDocument(id, cid, storagePath, title, contractsTableName) {
+    const editorContainer = document.getElementById('fullScreenEditor');
+    const templatesContent = document.getElementById('templatesContent');
+    const editorButtons = document.getElementById('editorButtons') || document.createElement('div'); // Fallback if editorButtons doesn't exist
+    editorButtons.id = 'editorButtons';
+
+    templatesContent.classList.add('hidden');
+    editorContainer.style.display = 'block';
+
+    const baseUrl = 'http://192.168.133.37:3000';
+    const jwtSecret = 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr';
+    const fileUrl = `${baseUrl}${storagePath}`;
+    const username = localStorage.getItem('loggedInAdminUsername');
+
+    const config = {
+        document: {
+            fileType: 'docx',
+            title: `${title}.docx`,
+            url: fileUrl,
+            key: `${cid}_${Date.now()}`,
+            permissions: { edit: false, download: false } // Read-only mode
+        },
+        documentType: 'word',
+        editorConfig: {
+            mode: 'view', // View mode for read-only
+            user: { id: username, name: username },
+            lang: 'en'
+        },
+        height: '100%',
+        width: '100%'
+    };
+    const token = jwt.sign(config, jwtSecret);
+    config.token = token;
+
+    // Destroy existing editor if it exists
+    if (createEditor) createEditor.destroyEditor();
+
+    // Add buttons for OK to Proceed, Add Comment, and Close
+    editorButtons.innerHTML = `
+        <button id="okToProceedBtn" class="btn btn-success">OK to Proceed</button>
+        <button id="addCommentBtn" class="btn btn-info">Add Comment</button>
+        <button id="closeReviewBtn" class="btn btn-secondary">Close</button>
+    `;
+    editorContainer.innerHTML = '<div id="editorWrapper" style="height: 80vh;"></div>';
+    editorContainer.prepend(editorButtons);
+
+    // Initialize OnlyOffice editor
+    createEditor = new DocsAPI.DocEditor('editorWrapper', config);
+
+    // OK to Proceed button
+    document.getElementById('okToProceedBtn').onclick = async () => {
+        try {
+            const { error } = await supabaseClient
+                .from(contractsTableName)
+                .update({ valid: 'Done', updatedon: new Date().toISOString() })
+                .eq('id', id)
+                .eq('valid', 'Pending');
+            if (error) throw new Error(`Failed to approve: ${error.message}`);
+            alert('Contract modification approved successfully!');
+            createEditor.destroyEditor();
+            editorContainer.style.display = 'none';
+            templatesContent.classList.remove('hidden');
+            showReviewers(document.getElementById('reviewersLink'));
+        } catch (err) {
+            console.error('Error approving contract modification:', err);
+            alert(`Error: ${err.message}`);
+        }
+    };
+
+    // Add Comment button
+    document.getElementById('addCommentBtn').onclick = () => {
+        openCommentedModal(id, cid, contractsTableName);
+    };
+
+    // Close button
+    document.getElementById('closeReviewBtn').onclick = () => {
+        createEditor.destroyEditor();
+        editorContainer.style.display = 'none';
+        templatesContent.classList.remove('hidden');
+        showReviewers(document.getElementById('reviewersLink'));
+    };
+}
+
+// Reused openCommentModal function (assumed to be defined elsewhere or added here)
+function openCommentedModal(id, cid, contractsTableName) {
+    const commentPopup = document.createElement('div');
+    commentPopup.className = 'modal fade show';
+    commentPopup.style.display = 'block';
+    commentPopup.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Add Comment</h5>
+                    <button type="button" class="btn-close" onclick="this.closest('.modal').remove()"></button>
+                </div>
+                <div class="modal-body">
+                    <textarea id="commentText" class="form-control" rows="4" placeholder="Enter your comment"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                    <button type="button" id="submitCommentBtn" class="btn btn-primary">Submit</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(commentPopup);
+
+    // Handle comment submission
+    document.getElementById('submitCommentBtn').onclick = async () => {
+        const comment = document.getElementById('commentText').value.trim();
+        if (!comment) {
+            alert('Please enter a comment.');
+            return;
+        }
+
+        try {
+            // Update all rows with the same cid to stage: 'Draft', status: 'In Progress', valid: 'Pending'
+            const { error } = await supabaseClient
+                .from(contractsTableName)
+                .update({
+                    stage: 'Draft',
+                    status: 'In Progress',
+                    valid: 'Pending',
+                    updatedon: new Date().toISOString()
+                })
+                .eq('cid', cid);
+            if (error) throw new Error(`Failed to update contract: ${error.message}`);
+
+            // Optionally, store the comment (assuming a comments column or table exists)
+            // Example: await supabaseClient.from('comments').insert({ contract_id: id, comment, created_by: localStorage.getItem('loggedInAdminUsername') });
+
+            alert('Comment submitted successfully.');
+            commentPopup.remove();
+            createEditor.destroyEditor();
+            document.getElementById('fullScreenEditor').style.display = 'none';
+            document.getElementById('templatesContent').classList.remove('hidden');
+            showReviewers(document.getElementById('reviewersLink'));
+        } catch (err) {
+            console.error('Error submitting comment:', err);
+            alert(`Error: ${err.message}`);
+        }
+    };
+}
+async function openReviewDocument(id, cid, storagePath, title, contractsTableName) {
+    const editorContainer = document.getElementById('fullScreenEditor');
+    const templatesContent = document.getElementById('templatesContent');
+    const editorButtons = document.getElementById('editorButtons');
+
+    templatesContent.classList.add('hidden');
+    editorContainer.style.display = 'block';
+
+    const baseUrl = 'http://192.168.133.37:3000';
+    const jwtSecret = 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr';
+    const fileUrl = `${baseUrl}${storagePath}`;
+    const username = localStorage.getItem('loggedInAdminUsername');
+
+    const config = {
+        document: {
+            fileType: 'docx',
+            title: `${title}.docx`,
+            url: fileUrl,
+            key: `${cid}_${Date.now()}`,
+            permissions: { edit: false, download: false } // Read-only mode
+        },
+        documentType: 'word',
+        editorConfig: {
+            mode: 'view', // View mode for read-only
+            user: { id: username, name: username },
+            lang: 'en'
+        },
+        height: '100%',
+        width: '100%'
+    };
+    const token = jwt.sign(config, jwtSecret);
+    config.token = token;
+
+    if (createEditor) createEditor.destroyEditor();
+
+    editorButtons.innerHTML = `
+        <button id="okToProceedBtn" class="btn btn-success">OK to Proceed</button>
+        <button id="addCommentBtn" class="btn btn-info">Add Comment</button>
+        <button id="closeReviewBtn" class="btn btn-secondary">Close</button>
+    `;
+
+    createEditor = new DocsAPI.DocEditor('editorWrapper', config);
+
+    // OK to Proceed button
+    document.getElementById('okToProceedBtn').onclick = async () => {
+        try {
+            const { error } = await supabaseClient
+                .from(contractsTableName)
+                .update({ valid: 'Done', updatedon: new Date().toISOString() })
+                .eq('id', id)
+                .eq('valid', 'Pending');
+            if (error) throw new Error(`Failed to approve: ${error.message}`);
+            alert('Contract approved successfully!');
+            createEditor.destroyEditor();
+            editorContainer.style.display = 'none';
+            templatesContent.classList.remove('hidden');
+            showReviewers(document.getElementById('reviewersLink'));
+        } catch (err) {
+            console.error('Error approving contract:', err);
+            alert(`Error: ${err.message}`);
+        }
+    };
+
+    // Add Comment button
+    document.getElementById('addCommentBtn').onclick = () => {
+        openCommentModal(id, cid, contractsTableName);
+    };
+
+    // Close button
+    document.getElementById('closeReviewBtn').onclick = () => {
+        createEditor.destroyEditor();
+        editorContainer.style.display = 'none';
+        templatesContent.classList.remove('hidden');
+        showReviewers(document.getElementById('reviewersLink'));
+    };
+}
+
+async function openCommentModal(id, cid, contractsTableName) {
+    const modalHtml = `
+        <div class="modal fade" id="addCommentModal" tabindex="-1" aria-labelledby="addCommentModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addCommentModalLabel">Add Comment</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="commentText" class="form-label">Comment</label>
+                            <textarea class="form-control" id="commentText" rows="4" placeholder="Enter your comment" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="submitCommentBtn">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('addCommentModal'));
+    modal.show();
+
+    document.getElementById('submitCommentBtn').onclick = async () => {
+        const comment = document.getElementById('commentText').value.trim();
+        if (!comment) {
+            alert('Please enter a comment.');
+            return;
+        }
+
+        try {
+            // Update all rows with the same cid to Draft/In Progress/Pending
+            const { error: updateError } = await supabaseClient
+                .from(contractsTableName)
+                .update({
+                    stage: 'Draft',
+                    status: 'In Progress',
+                    valid: 'Pending',
+                    updatedon: new Date().toISOString()
+                })
+                .eq('cid', cid);
+            if (updateError) throw new Error(`Failed to update contract: ${updateError.message}`);
+
+            alert('Comment submitted successfully! Contract reverted to Draft.');
+            modal.hide();
+            if (createEditor) createEditor.destroyEditor();
+            document.getElementById('fullScreenEditor').style.display = 'none';
+            document.getElementById('templatesContent').classList.remove('hidden');
+            showReviewers(document.getElementById('reviewersLink'));
+        } catch (err) {
+            console.error('Error submitting comment:', err);
+            alert(`Error: ${err.message}`);
+        }
+    };
+
+    document.getElementById('addCommentModal').addEventListener('hidden.bs.modal', () => {
+        document.getElementById('addCommentModal').remove();
+    });
+}
+// Show Signatures
+async function showSignatures(element) {
+    const menuItems = document.querySelectorAll('.menu-item');
+    menuItems.forEach(item => item.classList.remove('active'));
+    element.parentElement.classList.add('active');
+    const myApprovalsMenu = document.getElementById('myApprovalsLink').parentElement;
+    myApprovalsMenu.classList.add('active');
+    const submenu = myApprovalsMenu.querySelector('.menu-sub');
+    submenu.style.display = 'block';
+
+    const templatesContent = document.getElementById('templatesContent');
+    const editorContainer = document.getElementById('fullScreenEditor');
+
+    if (!editorContainer) {
+        console.error('fullScreenEditor element not found in DOM');
+        templatesContent.innerHTML = `<div class="card"><div class="card-body">Error: Editor container not found</div></div>`;
+        return;
+    }
+    editorContainer.style.display = 'none';
+    templatesContent.classList.remove('hidden');
+
+    const organisationName = localStorage.getItem('loggedInOrganisationName');
+    const loggedInUsername = localStorage.getItem('loggedInAdminUsername');
+    if (!organisationName || !loggedInUsername) {
+        alert('No user logged in. Please log in first.');
+        window.location.href = 'login.html';
+        return;
+    }
+
+    templatesContent.innerHTML = `
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Signatures</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Agreement Title</th>
+                                <th>Requested By</th>
+                                <th>Account Name</th>
+                                <th>Created On</th>
+                                <th>Updated On</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="signaturesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const contractsTableName = `${organisationName.toLowerCase().replace(/[^a-z0-9_]/g, '_')}_contracts`;
+
+    try {
+        // Fetch user details
+        const { data: userData, error: userError } = await supabaseClient
+            .from('users')
+            .select('team_type, role, email, organisation')
+            .eq('username', loggedInUsername)
+            .eq('organisation', organisationName)
+            .single();
+        if (userError || !userData) {
+            throw new Error(`Failed to fetch user details: ${userError?.message || 'No user found'}`);
+        }
+        const { team_type, role, email } = userData;
+
+        // Fetch contracts with initial filters
+        const { data: contracts, error: contractsError } = await supabaseClient
+            .from(contractsTableName)
+            .select('id, cid, title, requested_by, accountname, createdon, updatedon, storage_path_pdf, isignedby, signed_email, team, valid')
+            .eq('stage', 'Pending Signature – Internal')
+            .eq('status', 'In Progress')
+            .eq('valid', 'Pending')
+            .eq('team', team_type);
+        if (contractsError) {
+            throw new Error(`Failed to fetch contracts: ${contractsError.message}`);
+        }
+
+        // Filter based on isignedby conditions
+        const filteredContracts = contracts.filter(contract => {
+            if (contract.team !== team_type) return false;
+            if (contract.isignedby === 'Team Head') {
+                return role === 'head';
+            } else if (contract.isignedby === 'Any Team Member') {
+                return true;
+            } else if (contract.isignedby === 'Specific Team Member') {
+                return contract.signed_email === email;
+            }
+            return false;
+        });
+
+        // Render filtered contracts
+        const tbody = document.getElementById('signaturesTableBody');
+        tbody.innerHTML = '';
+        if (filteredContracts.length > 0) {
+            filteredContracts.forEach(contract => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${contract.title}</td>
+                    <td>${contract.requested_by}</td>
+                    <td>${contract.accountname}</td>
+                    <td>${new Date(contract.createdon).toLocaleString()}</td>
+                    <td>${new Date(contract.updatedon).toLocaleString()}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary review-btn" 
+                                data-id="${contract.id}" 
+                                data-cid="${contract.cid}" 
+                                data-storage-path="${contract.storage_path_pdf}" 
+                                data-title="${contract.title}">
+                            Review
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // Attach event listeners to review buttons
+            document.querySelectorAll('.review-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = btn.dataset.id;
+                    const cid = btn.dataset.cid;
+                    const storagePath = btn.dataset.storagePath;
+                    const title = btn.dataset.title;
+                    openSignatureDocument(id, cid, storagePath, title, contractsTableName, email, team_type);
+                });
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">No signatures pending.</td></tr>';
+        }
+    } catch (err) {
+        console.error('Error in showSignatures:', err);
+        const tbody = document.getElementById('signaturesTableBody');
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center">Error: ${err.message}</td></tr>`;
+    }
+}
+async function openSignatureDocument(id, cid, storagePath, title, contractsTableName, userEmail, team_type) {
+    const editorContainer = document.getElementById('fullScreenEditor');
+    const templatesContent = document.getElementById('templatesContent');
+    const editorButtons = document.getElementById('editorButtons');
+
+    templatesContent.classList.add('hidden');
+    editorContainer.style.display = 'block';
+
+    const baseUrl = 'http://192.168.133.37:3000';
+    const jwtSecret = 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr';
+    const fileUrl = `${baseUrl}${storagePath}`;
+    const callbackUrl = `${baseUrl}/sync-draft?tableName=${contractsTableName}&contractId=${cid}&contractTitle=${encodeURIComponent(title)}&orgcode=${storagePath.split('/')[1]}&username=${encodeURIComponent(localStorage.getItem('loggedInAdminUsername'))}`;
+
+    const config = {
+        document: {
+            fileType: 'pdf',
+            title: `${title}.pdf`,
+            url: fileUrl,
+            key: `${cid}_${Date.now()}`,
+            permissions: { edit: true, download: true }
+        },
+        documentType: 'pdf',
+        editorConfig: {
+            mode: 'edit',
+            callbackUrl: callbackUrl,
+            user: { id: localStorage.getItem('loggedInAdminUsername'), name: localStorage.getItem('loggedInAdminUsername') },
+            lang: 'en'
+        },
+        events: {
+            onReady: () => console.log('Editor is ready'),
+            onError: (event) => console.error('Editor error:', event.data),
+            onDocumentStateChange: (event) => {
+                if (event.data && event.data.saved) {
+                    console.log('Document changes saved');
+                }
+            }
+        },
+        height: '100%',
+        width: '100%'
+    };
+    const token = jwt.sign(config, jwtSecret);
+    config.token = token;
+
+    if (createEditor) createEditor.destroyEditor();
+
+    editorButtons.innerHTML = `
+        <button id="initiateSignatureBtn" class="btn btn-success">Initiate Signature</button>
+        <button id="addCommentBtn" class="btn btn-info">Add Comment</button>
+        <button id="closeEditorBtn" class="btn btn-secondary">Close</button>
+    `;
+
+    createEditor = new DocsAPI.DocEditor('editorWrapper', config);
+
+    document.getElementById('initiateSignatureBtn').onclick = () => showSignatureOptions(id, cid, storagePath, title, contractsTableName, userEmail, team_type);
+    document.getElementById('addCommentBtn').onclick = () => showCommentPopup(id, cid, contractsTableName);
+    document.getElementById('closeEditorBtn').onclick = () => {
+        if (createEditor) createEditor.destroyEditor();
+        editorContainer.style.display = 'none';
+        templatesContent.classList.remove('hidden');
+        showSignatures(element);
+    };
+}
+
+function showSignatureOptions(id, cid, storagePath, title, contractsTableName, userEmail, team_type) {
+    const modalHtml = `
+        <div class="modal fade" id="signatureOptionsModal" tabindex="-1" aria-labelledby="signatureOptionsModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="signatureOptionsModalLabel">Initiate Signature</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="signatureMethod" id="autoGen" value="auto">
+                            <label class="form-check-label" for="autoGen">Automatic Generation</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="signatureMethod" id="scratchPad" value="scratch">
+                            <label class="form-check-label" for="scratchPad">Scratch Pad</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="signatureMethod" id="uploadImage" value="upload">
+                            <label class="form-check-label" for="uploadImage">Upload Image</label>
+                        </div>
+                        <div id="autoGenBox" class="mt-3" style="display: none;">
+                            <input type="text" class="form-control" id="signatureText" placeholder="Enter signature text">
+                        </div>
+                        <div id="scratchPadBox" class="mt-3" style="display: none;">
+                            <canvas id="signatureCanvas" width="300" height="100" style="border: 1px solid #000;"></canvas>
+                        </div>
+                        <div id="uploadImageBox" class="mt-3" style="display: none;">
+                            <input type="file" class="form-control" id="signatureImage" accept="image/*">
+                        </div>
+                        <div id="signaturePlacement" style="display: none; margin-top: 20px;">
+                            <canvas id="placementCanvas"></canvas>
+                            <button id="prevPage">Previous</button>
+                            <button id="nextPage">Next</button>
+                            <button id="confirmPlacement">OK</button>
+                            <button id="cancelPlacement">Cancel</button>
+                        </div>
+                        <div id="previewContainer" style="display: none; margin-top: 20px;">
+                            <h6>Preview of Signed PDF:</h6>
+                            <iframe id="pdfPreview" style="width: 100%; height: 400px; border: 1px solid #ccc;"></iframe>
+                            <button type="button" class="btn btn-primary mt-3" id="finalOkBtn">OK</button>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="confirmSignatureBtn">OK</button>
+                    </div>
+                </div>
+            </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('signatureOptionsModal'));
+    modal.show();
+
+    document.getElementById('autoGen').addEventListener('change', () => {
+        document.getElementById('autoGenBox').style.display = 'block';
+        document.getElementById('scratchPadBox').style.display = 'none';
+        document.getElementById('uploadImageBox').style.display = 'none';
+        document.getElementById('signaturePlacement').style.display = 'none';
+    });
+    document.getElementById('scratchPad').addEventListener('change', () => {
+        document.getElementById('autoGenBox').style.display = 'none';
+        document.getElementById('scratchPadBox').style.display = 'block';
+        document.getElementById('uploadImageBox').style.display = 'none';
+        document.getElementById('signaturePlacement').style.display = 'none';
+        initSignatureCanvas();
+    });
+    document.getElementById('uploadImage').addEventListener('change', () => {
+        document.getElementById('autoGenBox').style.display = 'none';
+        document.getElementById('scratchPadBox').style.display = 'none';
+        document.getElementById('uploadImageBox').style.display = 'block';
+        document.getElementById('signaturePlacement').style.display = 'none';
+    });
+
+    document.getElementById('confirmSignatureBtn').onclick = async () => {
+        const method = document.querySelector('input[name="signatureMethod"]:checked')?.value;
+        let signatureData = null;
+
+        if (method === 'auto') {
+            const text = document.getElementById('signatureText').value;
+            if (text) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 150;
+                canvas.height = 50;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = 'black';
+                ctx.font = '20px Arial';
+                ctx.fillText(text, 10, 30);
+                signatureData = canvas.toDataURL('image/png');
+            }
+        } else if (method === 'scratch') {
+            const canvas = document.getElementById('signatureCanvas');
+            signatureData = canvas.toDataURL('image/png');
+        } else if (method === 'upload') {
+            const fileInput = document.getElementById('signatureImage');
+            if (fileInput.files.length > 0) {
+                signatureData = fileInput.files[0];
+            }
+        }
+
+        if (signatureData) {
+            try {
+                console.log('Starting signature placement with method:', method, 'signatureData type:', typeof signatureData);
+                // Hide OK and Cancel buttons before placement begins
+                const modalFooter = document.querySelector('#signatureOptionsModal .modal-footer');
+                const okButton = document.getElementById('confirmSignatureBtn');
+                const cancelButton = modalFooter.querySelector('.btn-secondary[data-bs-dismiss="modal"]');
+                if (okButton && cancelButton) {
+                    okButton.style.display = 'none';
+                    cancelButton.style.display = 'none';
+                }
+                document.getElementById('signaturePlacement').style.display = 'block';
+                const previewUrl = await placeSignature(id, cid, storagePath, title, contractsTableName, userEmail, signatureData);
+                console.log('Received preview URL from placeSignature:', previewUrl);
+
+                const previewContainer = document.getElementById('previewContainer');
+                const pdfPreview = document.getElementById('pdfPreview');
+                if (previewContainer && pdfPreview) {
+                    console.log('Setting up preview with URL:', previewUrl);
+                    previewContainer.style.display = 'block';
+                    pdfPreview.src = previewUrl;
+                    pdfPreview.onload = () => console.log('Iframe loaded successfully with URL:', previewUrl);
+                    pdfPreview.onerror = (e) => console.error('Iframe load error:', e, 'URL:', previewUrl);
+                } else {
+                    console.error('Preview container or pdfPreview element not found in DOM');
+                }
+                alert('Signature added successfully! Preview below. The PDF has been overwritten.');
+                // Add event listener for the final OK button
+                document.getElementById('finalOkBtn').onclick = () => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('signatureOptionsModal'));
+                    modal.hide();
+                    setTimeout(() => {
+                        window.location.href = '#signatures';
+                        window.location.reload();
+                    }, 1000); // 1-second delay
+                };
+            } catch (error) {
+                console.error('Signature placement error:', error.message, error.stack);
+                alert('Failed to add signature: ' + error.message);
+            }
+        } else {
+            alert('No signature data provided.');
+        }
+        // modal.hide(); // Keep commented to leave modal open for preview
+        // document.getElementById('signatureOptionsModal').remove(); // Keep commented
+    };
+}
+function initSignatureCanvas() {
+    const canvas = document.getElementById('signatureCanvas');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    canvas.addEventListener('mousedown', (e) => {
+        isDrawing = true;
+        [lastX, lastY] = [e.offsetX, e.offsetY];
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+        if (isDrawing) {
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+            [lastX, lastY] = [e.offsetX, e.offsetY];
+        }
+    });
+
+    canvas.addEventListener('mouseup', () => {
+        isDrawing = false;
+    });
+
+    canvas.addEventListener('mouseout', () => {
+        isDrawing = false;
+    });
+}
+function showCommentPopup(id, cid, contractsTableName) {
+    const modalHtml = `
+        <div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="commentModalLabel">Add Comment</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <textarea class="form-control" id="commentText" rows="3" placeholder="Enter your comment"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="submitCommentBtn">Submit</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('commentModal'));
+    modal.show();
+
+    document.getElementById('submitCommentBtn').onclick = async () => {
+        const comment = document.getElementById('commentText').value.trim();
+        if (comment) {
+            const { error } = await supabaseClient
+                .from(contractsTableName)
+                .update({
+                    stage: 'Draft',
+                    status: 'In Progress',
+                    valid: 'Pending',
+                    updatedon: new Date().toISOString()
+                })
+                .eq('cid', cid);
+            if (error) throw error;
+
+            const { data, error: updateError } = await supabaseClient
+                .from(contractsTableName)
+                .update({ updatedon: new Date().toISOString() })
+                .eq('cid', cid);
+            if (updateError) throw updateError;
+
+            modal.hide();
+            document.getElementById('commentModal').remove();
+            showSignatures(document.getElementById('signaturesLink'));
+        }
+    };
+}
+
+const { PDFDocument, rgb } = PDFLib;
+
+
+
+
+async function placeSignature(id, cid, storagePath, title, contractsTableName, userEmail, signatureData) {
+    console.log('Starting placeSignature with storagePath:', storagePath, 'userEmail:', userEmail, 'signatureData type:', typeof signatureData);
+
+    // Fetch the PDF
+    const pdfUrl = `http://192.168.133.37:3000/files${storagePath}`;
+    console.log('Attempting to fetch PDF from:', pdfUrl);
+    const response = await fetch(pdfUrl);
+    if (!response.ok) {
+        console.error('Fetch failed:', response.status, response.statusText);
+        throw new Error(`Failed to fetch PDF: ${response.statusText}`);
+    }
+    const pdfBytes = await response.arrayBuffer();
+    const pdfDoc = await PDFDocument.load(pdfBytes);
+
+    // Try to extract form fields or annotations
+    const form = pdfDoc.getForm();
+    const fields = form ? form.getFields() : [];
+    let signatureField = null;
+    console.log('Extracted fields:', fields.map(f => ({ name: f.getName(), type: f.getType() })));
+
+    for (const field of fields) {
+        if (field instanceof pdfDoc.getForm().SignatureField) {
+            const widget = field.widgets[0];
+            const rect = widget.getRectangle();
+            const fieldName = field.getName();
+            console.log('Signature field found:', fieldName, 'at', rect);
+            if (fieldName.toLowerCase().includes(userEmail.toLowerCase())) {
+                signatureField = { left: rect.x, top: rect.y + rect.height, width: rect.width, height: rect.height };
+                break;
+            }
+        }
+    }
+
+    // If no matching field, convert to images for manual selection using pdf.js
+    let currentPageIndex = 0;
+    let signaturePlaced = false;
+    if (!signatureField) {
+        console.log('No matching signature field found, converting to images for manual selection');
+        const loadingTask = pdfjsLib.getDocument({ data: pdfBytes });
+        const pdf = await loadingTask.promise;
+        const page = await pdf.getPage(currentPageIndex + 1);
+        const viewport = page.getViewport({ scale: 1.5 });
+        const canvas = document.getElementById('placementCanvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext('2d');
+        const renderContext = { canvasContext: ctx, viewport: viewport };
+        await page.render(renderContext).promise;
+        const canvasCenterY = canvas.height / 2;
+        console.log('Canvas dimensions:', { width: canvas.width, height: canvas.height }, 'Center Y:', canvasCenterY);
+
+        // Navigation and selection logic
+        document.getElementById('prevPage').onclick = async () => {
+            if (currentPageIndex > 0) {
+                currentPageIndex--;
+                await renderPage(pdf, currentPageIndex + 1);
+            }
+        };
+        document.getElementById('nextPage').onclick = async () => {
+            if (currentPageIndex < pdf.numPages - 1) {
+                currentPageIndex++;
+                await renderPage(pdf, currentPageIndex + 1);
+            }
+        };
+
+        // Wait for user selection and confirmation
+        try {
+            signatureField = await new Promise((resolve, reject) => {
+                let selectedX = 0, selectedY = 0;
+                const canvas = document.getElementById('placementCanvas');
+                const ctx = canvas.getContext('2d');
+
+                canvas.addEventListener('click', (event) => {
+                    const rect = canvas.getBoundingClientRect();
+                    selectedX = event.clientX - rect.left;
+                    selectedY = event.clientY - rect.top; // Top-down y coordinate
+                    console.log('Raw click coordinates (top-down):', { x: selectedX, y: selectedY }, 'Relative to center:', selectedY - canvasCenterY);
+                    ctx.beginPath();
+                    ctx.rect(selectedX - 75, selectedY, 150, 50); // Box at click location
+                    ctx.strokeStyle = 'blue';
+                    ctx.stroke();
+                });
+
+                document.getElementById('confirmPlacement').onclick = () => {
+                    if (selectedX && selectedY) {
+                        const field = { left: selectedX - 75, top: selectedY, width: 150, height: 50 };
+                        console.log('Confirmed signature placement at:', field);
+                        document.getElementById('signaturePlacement').style.display = 'none';
+                        resolve(field);
+                    } else {
+                        reject(new Error('No click position selected'));
+                    }
+                };
+
+                document.getElementById('cancelPlacement').onclick = () => {
+                    document.getElementById('signaturePlacement').style.display = 'none';
+                    reject(new Error('Signature placement cancelled by user'));
+                };
+
+                // Set a timeout to reject if no action is taken
+                setTimeout(() => reject(new Error('Signature placement timed out')), 30000); // 30-second timeout
+            });
+
+            const page = pdfDoc.getPages()[currentPageIndex];
+            const pdfViewport = page.getSize();
+            console.log('PDF page size:', pdfViewport);
+            let pngData;
+            if (typeof signatureData === 'string' && signatureData.startsWith('data:image/')) {
+                const [mimeType] = signatureData.match(/data:image\/(png|jpeg|jpg)/i) || [];
+                if (!mimeType) {
+                    throw new Error('Unsupported image format. Only PNG and JPEG are supported.');
+                }
+                const base64String = signatureData.replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
+                pngData = Uint8Array.from(atob(base64String), c => c.charCodeAt(0));
+                console.log('Extracted MIME type from base64:', mimeType);
+            } else if (signatureData instanceof Blob) {
+                // Validate file type
+                if (!signatureData.type.startsWith('image/')) {
+                    throw new Error('Unsupported file type. Please upload a PNG or JPEG image.');
+                }
+                const fileReader = new FileReader();
+                pngData = await new Promise((resolve, reject) => {
+                    fileReader.onload = (event) => resolve(new Uint8Array(event.target.result));
+                    fileReader.onerror = () => reject(new Error('Failed to read uploaded image'));
+                    fileReader.readAsArrayBuffer(signatureData);
+                });
+                console.log('Converted Blob to Uint8Array, length:', pngData.length, 'MIME type:', signatureData.type);
+            } else {
+                // Auto-generate signature if not a pre-existing image
+                const canvas = document.createElement('canvas');
+                canvas.width = 150;
+                canvas.height = 50;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = 'black';
+                ctx.font = 'italic 20px Arial'; // Italic styling for signature-like text
+                const text = userEmail.split('@')[0] || 'Signature'; // Use email username or default
+                const textMetrics = ctx.measureText(text);
+                const textX = (canvas.width - textMetrics.width) / 2;
+                const textY = (canvas.height + 20) / 2; // Center vertically with font size adjustment
+                ctx.fillText(text, textX, textY);
+                pngData = Uint8Array.from(atob(canvas.toDataURL('image/png').split(',')[1]), c => c.charCodeAt(0));
+                console.log('Auto-generated PNG signature with italic text');
+            }
+            let img;
+            try {
+                if (typeof signatureData === 'string' && /png/i.test(signatureData)) {
+                    img = await pdfDoc.embedPng(pngData);
+                    console.log('Embedded PNG successfully');
+                } else if (typeof signatureData === 'string' && /jpeg|jpg/i.test(signatureData)) {
+                    img = await pdfDoc.embedJpg(pngData);
+                    console.log('Embedded JPG successfully');
+                } else if (signatureData.type === 'image/png' || signatureData.type === 'image/x-png') {
+                    img = await pdfDoc.embedPng(pngData);
+                    console.log('Embedded PNG successfully');
+                } else if (signatureData.type === 'image/jpeg' || signatureData.type === 'image/jpg') {
+                    img = await pdfDoc.embedJpg(pngData);
+                    console.log('Embedded JPG successfully');
+                } else {
+                    img = await pdfDoc.embedPng(pngData); // Default to PNG for auto-generated
+                    console.log('Embedded auto-generated PNG successfully');
+                }
+            } catch (error) {
+                console.error('Error embedding image:', error.message, error.stack);
+                throw error;
+            }
+            // Adjust coordinates to match PDF bottom-up coordinates
+            const scaleX = pdfViewport.width / canvas.width;
+            const scaleY = pdfViewport.height / canvas.height;
+            const adjustedX = signatureField.left * scaleX;
+            const adjustedY = (pdfViewport.height - (signatureField.top * scaleY + signatureField.height * scaleY)); // Invert y for PDF
+            console.log('Adjusted coordinates for PDF:', { x: adjustedX, y: adjustedY }, 'Box height:', signatureField.height * scaleY);
+            try {
+                page.drawImage(img, {
+                    x: adjustedX,
+                    y: adjustedY,
+                    width: signatureField.width * scaleX,
+                    height: signatureField.height * scaleY,
+                    opacity: 1.0
+                });
+                console.log('Image drawn successfully');
+            } catch (error) {
+                console.error('Error drawing image:', error.message, error.stack);
+                throw error;
+            }
+            signaturePlaced = true;
+            console.log('Signature image embedded at adjusted coordinates:', adjustedX, adjustedY);
+        } catch (error) {
+            console.error('Manual selection error:', error.message, error.stack);
+            throw error; // Propagate error to caller
+        }
+    }
+
+    // Place signature if field was found or set
+    if (signatureField && !signaturePlaced) {
+        try {
+            let pngData;
+            if (typeof signatureData === 'string' && signatureData.startsWith('data:image/')) {
+                const [mimeType] = signatureData.match(/data:image\/(png|jpeg|jpg)/i) || [];
+                if (!mimeType) {
+                    throw new Error('Unsupported image format. Only PNG and JPEG are supported.');
+                }
+                const base64String = signatureData.replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
+                pngData = Uint8Array.from(atob(base64String), c => c.charCodeAt(0));
+                console.log('Extracted MIME type from base64:', mimeType);
+            } else if (signatureData instanceof Blob) {
+                if (!signatureData.type.startsWith('image/')) {
+                    throw new Error('Unsupported file type. Please upload a PNG or JPEG image.');
+                }
+                const fileReader = new FileReader();
+                pngData = await new Promise((resolve, reject) => {
+                    fileReader.onload = (event) => resolve(new Uint8Array(event.target.result));
+                    fileReader.onerror = () => reject(new Error('Failed to read uploaded image'));
+                    fileReader.readAsArrayBuffer(signatureData);
+                });
+                console.log('Converted Blob to Uint8Array, length:', pngData.length, 'MIME type:', signatureData.type);
+            } else {
+                // Auto-generate signature if not a pre-existing image
+                const canvas = document.createElement('canvas');
+                canvas.width = 150;
+                canvas.height = 50;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = 'black';
+                ctx.font = 'italic 20px Arial'; // Italic styling for signature-like text
+                const text = userEmail.split('@')[0] || 'Signature'; // Use email username or default
+                const textMetrics = ctx.measureText(text);
+                const textX = (canvas.width - textMetrics.width) / 2;
+                const textY = (canvas.height + 20) / 2; // Center vertically with font size adjustment
+                ctx.fillText(text, textX, textY);
+                pngData = Uint8Array.from(atob(canvas.toDataURL('image/png').split(',')[1]), c => c.charCodeAt(0));
+                console.log('Auto-generated PNG signature with italic text');
+            }
+            let img;
+            try {
+                if (typeof signatureData === 'string' && /png/i.test(signatureData)) {
+                    img = await pdfDoc.embedPng(pngData);
+                    console.log('Embedded PNG successfully');
+                } else if (typeof signatureData === 'string' && /jpeg|jpg/i.test(signatureData)) {
+                    img = await pdfDoc.embedJpg(pngData);
+                    console.log('Embedded JPG successfully');
+                } else if (signatureData.type === 'image/png' || signatureData.type === 'image/x-png') {
+                    img = await pdfDoc.embedPng(pngData);
+                    console.log('Embedded PNG successfully');
+                } else if (signatureData.type === 'image/jpeg' || signatureData.type === 'image/jpg') {
+                    img = await pdfDoc.embedJpg(pngData);
+                    console.log('Embedded JPG successfully');
+                } else {
+                    img = await pdfDoc.embedPng(pngData); // Default to PNG for auto-generated
+                    console.log('Embedded auto-generated PNG successfully');
+                }
+            } catch (error) {
+                console.error('Error embedding image:', error.message, error.stack);
+                throw error;
+            }
+            page.drawImage(img, {
+                x: signatureField.left,
+                y: signatureField.top - signatureField.height,
+                width: signatureField.width,
+                height: signatureField.height,
+                opacity: 1.0
+            }).catch(error => {
+                console.error('Error drawing image:', error.message, error.stack);
+                throw error;
+            });
+            signaturePlaced = true;
+            console.log('Signature image embedded at:', signatureField.left, signatureField.top - signatureField.height);
+        } catch (error) {
+            console.error('Signature placement error:', error.message, error.stack);
+            throw error;
+        }
+    }
+
+    if (!signaturePlaced) {
+        throw new Error('No signature field selected or detected.');
+    }
+
+    const updatedPdfBytes = await pdfDoc.save();
+    const blob = new Blob([updatedPdfBytes], { type: 'application/pdf' });
+
+    // Overwrite the original file
+    const saveUrl = `http://192.168.133.37:3000/upload`;
+    const formData = new FormData();
+    const filename = storagePath.split('/').pop() || `${title}.pdf`;
+    console.log('Appending file with filename:', filename, 'and path:', storagePath);
+    formData.append('file', blob, filename);
+    formData.append('path', storagePath);
+    console.log('FormData preview:', Array.from(formData.entries()).map(([key, value]) => `${key}: ${value instanceof Blob ? 'Blob' : value.toString().substring(0, 50)}`).join(', '));
+
+    await new Promise(resolve => setTimeout(resolve, 15000)); // 15-second delay to ensure file update
+
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 180000); // 3-minute timeout
+        const saveResponse = await fetch(saveUrl, {
+            method: 'POST',
+            body: formData,
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        console.log('Save response status:', saveResponse.status, 'statusText:', saveResponse.statusText);
+        if (!saveResponse.ok) {
+            const errorText = await saveResponse.text();
+            console.error('Save response error:', saveResponse.status, saveResponse.statusText, 'URL:', saveUrl, 'Response text:', errorText);
+            throw new Error(`Failed to save PDF: ${saveResponse.statusText} - ${errorText}`);
+        }
+        console.log('PDF overwritten successfully at:', saveUrl, 'with path:', storagePath);
+    } catch (error) {
+        console.error('Fetch error during save:', error.name, error.message, error.stack);
+        throw error;
+    }
+
+    // Poll server to confirm file availability
+    const maxAttempts = 5;
+    let attempt = 0;
+    let fileAvailable = false;
+    while (attempt < maxAttempts && !fileAvailable) {
+        try {
+            const checkResponse = await fetch(pdfUrl, { method: 'HEAD' });
+            console.log('File availability check attempt:', attempt + 1, 'Status:', checkResponse.status, 'Status Text:', checkResponse.statusText);
+            if (checkResponse.ok) {
+                fileAvailable = true;
+                console.log('File confirmed available at:', pdfUrl);
+            } else {
+                console.log('File not yet available, attempt:', attempt + 1, 'Waiting 3 seconds...');
+                await new Promise(resolve => setTimeout(resolve, 3000)); // 3-second interval
+                attempt++;
+            }
+        } catch (error) {
+            console.log('Check failed, attempt:', attempt + 1, 'Error:', error.name, error.message);
+            await new Promise(resolve => setTimeout(resolve, 3000)); // 3-second interval
+            attempt++;
+        }
+    }
+
+    if (!fileAvailable) {
+        console.warn('File not available after max attempts:', maxAttempts, 'Proceeding with potential delay.');
+    }
+
+    // Update database with original storage path
+    const { error: dbError } = await supabaseClient
+        .from(contractsTableName)
+        .update({ valid: 'Done', updatedon: new Date().toISOString(), storage_path: storagePath })
+        .eq('id', id);
+    if (dbError) {
+        console.error('Database update error:', dbError.message);
+        throw dbError;
+    }
+    console.log('Database updated with storage_path:', storagePath);
+
+    // Return preview URL
+    const previewUrl = `${pdfUrl}?t=${Date.now()}`;
+    console.log('Returning preview URL:', previewUrl);
+    return previewUrl;
+
+    // Function to render a specific page
+    async function renderPage(pdfDoc, pageNum) {
+        const page = await pdfDoc.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 1.5 });
+        const canvas = document.getElementById('placementCanvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        const ctx = canvas.getContext('2d');
+        const renderContext = { canvasContext: ctx, viewport: viewport };
+        await page.render(renderContext).promise;
+    }
+}
+function showCommentPopup(id, cid, contractsTableName) {
+    const modalHtml = `
+        <div class="modal fade" id="commentModal" tabindex="-1" aria-labelledby="commentModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="commentModalLabel">Add Comment</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <textarea class="form-control" id="commentText" rows="3" placeholder="Enter your comment"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="submitCommentBtn">Submit</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modal = new bootstrap.Modal(document.getElementById('commentModal'));
+    modal.show();
+
+    document.getElementById('submitCommentBtn').onclick = async () => {
+        const comment = document.getElementById('commentText').value.trim();
+        if (comment) {
+            const { error } = await supabaseClient
+                .from(contractsTableName)
+                .update({
+                    stage: 'Draft',
+                    status: 'In Progress',
+                    valid: 'Pending',
+                    updatedon: new Date().toISOString()
+                })
+                .eq('cid', cid);
+            if (error) throw error;
+
+            const { data, error: updateError } = await supabaseClient
+                .from(contractsTableName)
+                .update({ updatedon: new Date().toISOString() })
+                .eq('cid', cid);
+            if (updateError) throw updateError;
+
+            modal.hide();
+            document.getElementById('commentModal').remove();
+            showSignatures(document.getElementById('signaturesLink'));
+        }
+    };
+}
+
+// Populate Signatures Table
+async function populateSignaturesTable(orgName) {
+    const tbody = document.getElementById('signaturesTableBody');
+    const contractsTableName = `${orgName.toLowerCase().replace(/[^a-z0-9_]/g, '_')}_contracts`;
+    const username = localStorage.getItem('loggedInAdminUsername');
+    const { data: userData, error: userError } = await supabaseClient
+        .from('users')
+        .select('email')
+        .eq('username', username)
+        .single();
+    if (userError || !userData) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center">Error: Unable to fetch user data</td></tr>`;
+        return;
+    }
+    const userEmail = userData.email;
+
+    try {
+        const { data: signatures, error } = await supabaseClient
+            .from(contractsTableName)
+            .select('title, requested_by, accountname, createdon, updatedon, cid')
+            .eq('work', 'signature')
+            .in('isignedby', ['Team', 'Specific Team Member'])
+            .eq('signed_email', userEmail)
+            .eq('valid', 'Pending')
+            .order('createdon', { ascending: false });
+
+        if (error) throw new Error(`Failed to fetch signatures: ${error.message}`);
+
+        tbody.innerHTML = '';
+        if (signatures && signatures.length > 0) {
+            signatures.forEach(signature => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${signature.title}</td>
+                    <td>${signature.requested_by}</td>
+                    <td>${signature.accountname}</td>
+                    <td>${new Date(signature.createdon).toLocaleString()}</td>
+                    <td>${new Date(signature.updatedon).toLocaleString()}</td>
+                    <td><button class="btn btn-sm btn-outline-primary sign-btn" data-cid="${signature.cid}">Sign</button></td>
+                `;
+                tbody.appendChild(row);
+
+                row.querySelector('.sign-btn').addEventListener('click', () => {
+                    signContract(signature.cid, contractsTableName);
+                });
+            });
+        } else {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center">No pending signatures found.</td></tr>';
+        }
+    } catch (err) {
+        console.error('Error fetching signatures:', err);
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center">Error: ${err.message}</td></tr>`;
+    }
+}
+// Review Contract
+async function reviewContract(cid, contractsTableName) {
+    const { data: contractData, error } = await supabaseClient
+        .from(contractsTableName)
+        .select('storage_path, title')
+        .eq('cid', cid)
+        .eq('work', 'approval')
+        .eq('valid', 'Pending')
+        .single();
+    if (error || !contractData) {
+        alert('Error fetching contract details.');
+        return;
+    }
+
+    const editorContainer = document.getElementById('fullScreenEditor');
+    const templatesContent = document.getElementById('templatesContent');
+    const editorButtons = document.getElementById('editorButtons');
+
+    templatesContent.classList.add('hidden');
+    editorContainer.style.display = 'block';
+
+    const baseUrl = 'http://192.168.133.37:3000';
+    const jwtSecret = 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr';
+    const fileUrl = `${baseUrl}${contractData.storage_path}`;
+    const username = localStorage.getItem('loggedInAdminUsername');
+    const orgcode = (await supabaseClient.from('orgadmins').select('org_code').eq('organisation_name', localStorage.getItem('loggedInOrganisationName')).single()).data.org_code;
+
+    const config = {
+        document: {
+            fileType: 'docx',
+            title: `${contractData.title}.docx`,
+            url: fileUrl,
+            key: `${cid}_${Date.now()}`,
+            permissions: { edit: false, download: true }
+        },
+        documentType: 'word',
+        editorConfig: {
+            mode: 'view',
+            user: { id: username, name: username },
+            lang: 'en'
+        },
+        height: '100%',
+        width: '100%'
+    };
+    const token = jwt.sign(config, jwtSecret);
+    config.token = token;
+
+    if (createEditor) createEditor.destroyEditor();
+
+    editorButtons.innerHTML = `
+        <button id="approveBtn" class="btn btn-success">Approve</button>
+        <button id="closeReviewBtn" class="btn btn-secondary">Close</button>
+    `;
+
+    createEditor = new DocsAPI.DocEditor('editorWrapper', config);
+
+    document.getElementById('approveBtn').onclick = async () => {
+        try {
+            const { error } = await supabaseClient
+                .from(contractsTableName)
+                .update({ valid: 'Done', updatedon: new Date().toISOString() })
+                .eq('cid', cid)
+                .eq('work', 'approval')
+                .eq('valid', 'Pending');
+            if (error) throw new Error(`Failed to approve: ${error.message}`);
+            alert('Contract approved successfully!');
+            createEditor.destroyEditor();
+            editorContainer.style.display = 'none';
+            templatesContent.classList.remove('hidden');
+            showReviewers(document.getElementById('reviewersLink'));
+        } catch (err) {
+            console.error('Error approving contract:', err);
+            alert(`Error: ${err.message}`);
+        }
+    };
+
+    document.getElementById('closeReviewBtn').onclick = () => {
+        createEditor.destroyEditor();
+        editorContainer.style.display = 'none';
+        templatesContent.classList.remove('hidden');
+        showReviewers(document.getElementById('reviewersLink'));
+    };
+}
+
+// Sign Contract
+async function signContract(cid, contractsTableName) {
+    const { data: contractData, error } = await supabaseClient
+        .from(contractsTableName)
+        .select('storage_path, title')
+        .eq('cid', cid)
+        .eq('work', 'signature')
+        .eq('valid', 'Pending')
+        .single();
+    if (error || !contractData) {
+        alert('Error fetching contract details.');
+        return;
+    }
+
+    const editorContainer = document.getElementById('fullScreenEditor');
+    const templatesContent = document.getElementById('templatesContent');
+    const editorButtons = document.getElementById('editorButtons');
+
+    templatesContent.classList.add('hidden');
+    editorContainer.style.display = 'block';
+
+    const baseUrl = 'http://192.168.133.37:3000';
+    const jwtSecret = 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr';
+    const fileUrl = `${baseUrl}${contractData.storage_path}`;
+    const username = localStorage.getItem('loggedInAdminUsername');
+    const orgcode = (await supabaseClient.from('orgadmins').select('org_code').eq('organisation_name', localStorage.getItem('loggedInOrganisationName')).single()).data.org_code;
+
+    const callbackUrl = `${baseUrl}/save-contract?tableName=${contractsTableName}&contractId=${cid}&contractTitle=${encodeURIComponent(contractData.title)}&orgcode=${orgcode}&username=${encodeURIComponent(username)}`;
+
+    const config = {
+        document: {
+            fileType: 'docx',
+            title: `${contractData.title}.docx`,
+            url: fileUrl,
+            key: `${cid}_${Date.now()}`,
+            permissions: { edit: true, download: true }
+        },
+        documentType: 'word',
+        editorConfig: {
+            mode: 'edit',
+            callbackUrl: callbackUrl,
+            user: { id: username, name: username },
+            lang: 'en'
+        },
+        height: '100%',
+        width: '100%'
+    };
+    const token = jwt.sign(config, jwtSecret);
+    config.token = token;
+
+    if (createEditor) createEditor.destroyEditor();
+
+    editorButtons.innerHTML = `
+        <button id="signBtn" class="btn btn-success">Sign</button>
+        <button id="closeSignBtn" class="btn btn-secondary">Close</button>
+    `;
+
+    createEditor = new DocsAPI.DocEditor('editorWrapper', config);
+
+    document.getElementById('signBtn').onclick = async () => {
+        try {
+            const { error } = await supabaseClient
+                .from(contractsTableName)
+                .update({ valid: 'Done', updatedon: new Date().toISOString() })
+                .eq('cid', cid)
+                .eq('work', 'signature')
+                .eq('valid', 'Pending');
+            if (error) throw new Error(`Failed to sign: ${error.message}`);
+            alert('Contract signed successfully!');
+            createEditor.destroyEditor();
+            editorContainer.style.display = 'none';
+            templatesContent.classList.remove('hidden');
+            showSignatures(document.getElementById('signaturesLink'));
+        } catch (err) {
+            console.error('Error signing contract:', err);
+            alert(`Error: ${err.message}`);
+        }
+    };
+
+    document.getElementById('closeSignBtn').onclick = () => {
+        createEditor.destroyEditor();
+        editorContainer.style.display = 'none';
+        templatesContent.classList.remove('hidden');
+        showSignatures(document.getElementById('signaturesLink'));
+    };
+}
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM content loaded, starting dependency check');
+            waitForDependencies();
+        });
+    </script>
+</body>
+</html>
