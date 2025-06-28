@@ -1097,8 +1097,8 @@ hr.my-4 {
 
         async function initializeApp() {
             console.log('Starting app initialization');
-            const supabaseUrl = '***REMOVED***';
-            const supabaseKey = '***REMOVED***';
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+            const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
             supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, {
                 fetch: (...args) => fetch(...args, { headers: { 'Accept': 'application/json' } })
             });
@@ -8137,7 +8137,7 @@ async function processContractMetadata(cid, contractsTable) {
         console.log('Extracted text (first 500 chars):', docText.substring(0, 500));
 
         // Call OpenAI API
-        const apiKey = '***REMOVED***';
+        const apiKey = import.meta.env.VITE_OPENAI_KEY; ;
         console.log('Sending document to OpenAI API');
         const maxRetries = 5;
         let retryCount = 0;
@@ -9173,8 +9173,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize Supabase client
     if (!supabaseClient) {
         supabaseClient = supabase.createClient(
-            '***REMOVED***',
-            '***REMOVED***'
+            import.meta.env.VITE_SUPABASE_URL,
+            import.meta.env.VITE_SUPABASE_ANON_KEY
         );
         console.log('Supabase client initialized');
     }

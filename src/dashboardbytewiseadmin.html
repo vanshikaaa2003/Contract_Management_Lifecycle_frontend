@@ -491,9 +491,8 @@
         }
 
         function initializeApp() {
-            const supabaseUrl = '***REMOVED***';
-            const supabaseKey = '***REMOVED***';
-            supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+            const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
             const dashboardLink = document.getElementById('dashboardLink');
             const dashboardSection = document.getElementById('dashboardSection');
