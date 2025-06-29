@@ -9,3 +9,6 @@ build/
 node_modules/
 .env         # make sure it never re-enters Git
 .env         # make sure it never re-enters Git
+git-filter-repo.py
+replacements.txt
+src/webpack.config.js
