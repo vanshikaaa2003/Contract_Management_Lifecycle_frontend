@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Form</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        body { padding: 20px; font-family: Arial, sans-serif; }
+        .form-field { margin: 5px; padding: 5px; border: 1px solid #ccc; width: 200px; }
+        button { background-color: #4CAF50; color: white; padding: 10px; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+    </style>
+</head>
+<body>
+    <div id="formContent"></div>
+    <button id="submitButton">Submit</button>
+
+    <script>
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        async function loadForm() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const docId = urlParams.get('id');
+
+            if (!docId) {
+                document.getElementById('formContent').innerHTML = '<p>Invalid document link.</p>';
+                return;
+            }
+
+            try {
+                const { data: documents, error } = await supabaseClient
+                    .from('bytewise_techlabs_legal')
+                    .select('document_name, metadata')
+                    .eq('metadata->>shareLink', `${window.location.origin}/form.html?id=${docId}`);
+
+                if (error || !documents.length) {
+                    throw new Error('Document not found.');
+                }
+
+                const doc = documents[0];
+                document.getElementById('formContent').innerHTML = doc.metadata.content;
+
+                document.getElementById('submitButton').onclick = async function() {
+                    const inputs = document.querySelectorAll('.form-field');
+                    const responses = {};
+                    inputs.forEach(input => {
+                        responses[input.id] = input.value;
+                    });
+
+                    const updatedMetadata = {
+                        ...doc.metadata,
+                        responses: [...(doc.metadata.responses || []), responses]
+                    };
+
+                    const { error: updateError } = await supabaseClient
+                        .from('bytewise_techlabs_legal')
+                        .update({ metadata: updatedMetadata })
+                        .eq('document_name', doc.document_name);
+
+                    if (updateError) throw new Error(`Failed to save responses: ${updateError.message}`);
+
+                    alert('Responses submitted successfully!');
+                    window.close();
+                };
+            } catch (err) {
+                console.error('Error loading form:', err);
+                document.getElementById('formContent').innerHTML = `<p>Error: ${err.message}</p>`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadForm);
+    </script>
+</body>
+</html>
