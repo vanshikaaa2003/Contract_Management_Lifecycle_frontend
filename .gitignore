@@ -13,3 +13,4 @@ git-filter-repo.py
 replacements.txt
 src/webpack.config.js
 .env         # make sure it never re-enters Git
+.env 
