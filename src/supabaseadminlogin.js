@@ -2,8 +2,8 @@ const { createClient } = require('@supabase/supabase-js');
 const bcrypt = require('bcryptjs');
 
 // Initialize Supabase client
-const supabaseUrl = '***REMOVED***';  // Your Supabase URL
-const supabaseKey = '***REMOVED***';  // Your Supabase anon key
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;  // Your Supabase URL
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;  // Your Supabase anon key
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Predefined admin credentials
