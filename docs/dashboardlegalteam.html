@@ -1108,7 +1108,7 @@ hr.my-4 {
             console.log('Logged in user:', { username: currentUserUsername, role: userRole });
             if (!currentUserUsername || !userRole) {
                 alert('Please log in first!');
-                //window.location.href = 'login.html';
+                window.location.href = 'login.html';
                 return;
             }
 
@@ -1942,7 +1942,7 @@ hr.my-4 {
             const organisationName = localStorage.getItem('loggedInOrganisationName');
             if (!organisationName) {
                 alert('No admin logged in. Please log in first.');
-                //window.location.href = 'login.html';
+                window.location.href = 'login.html';
                 return;
             }
 
@@ -2205,7 +2205,7 @@ hr.my-4 {
             const organisationName = localStorage.getItem('loggedInOrganisationName');
             if (!organisationName) {
                 alert('No admin logged in. Please log in first.');
-                //window.location.href = 'login.html';
+                window.location.href = 'login.html';
                 return;
             }
 
@@ -2576,7 +2576,7 @@ async function showWorkflow(element) {
     const organisationName = localStorage.getItem('loggedInOrganisationName');
     if (!organisationName) {
         alert('No admin logged in. Please log in first.');
-        //window.location.href = 'login.html';
+        window.location.href = 'login.html';
         return;
     }
 
@@ -3668,7 +3668,7 @@ async function showContractsInProgress(element) {
     if (!organisationName) {
         logToStorage('No admin logged in');
         alert('No admin logged in. Please log in first.');
-        //window.location.href = 'login.html';
+        window.location.href = 'login.html';
         return;
     }
 
@@ -4200,7 +4200,7 @@ async function showContractsCompleted(element) {
     const organisationName = localStorage.getItem('loggedInOrganisationName');
     if (!organisationName) {
         alert('No admin logged in. Please log in first.');
-        //window.location.href = 'login.html';
+        window.location.href = 'login.html';
         return;
     }
 
@@ -5154,7 +5154,7 @@ async function showReviewers(element) {
     const loggedInUsername = localStorage.getItem('loggedInAdminUsername');
     if (!organisationName || !loggedInUsername) {
         alert('No user logged in. Please log in first.');
-        //window.location.href = 'login.html';
+        window.location.href = 'login.html';
         return;
     }
 
@@ -5986,7 +5986,7 @@ async function showSignatures(element) {
     const loggedInUsername = localStorage.getItem('loggedInAdminUsername');
     if (!organisationName || !loggedInUsername) {
         alert('No user logged in. Please log in first.');
-        //window.location.href = 'login.html';
+        window.location.href = 'login.html';
         return;
     }
 
@@ -8361,7 +8361,7 @@ async function showMyCoDrafts(element) {
     const organisationName = localStorage.getItem('loggedInOrganisationName');
     if (!organisationName) {
         alert('No admin logged in. Please log in first.');
-        //window.location.href = 'login.html';
+        window.location.href = 'login.html';
         return;
     }
 
@@ -8578,7 +8578,7 @@ async function initializeDashboard(element) {
     const username = localStorage.getItem('loggedInAdminUsername');
     if (!organisationName || !username) {
         alert('Please log in first!');
-        //window.location.href = 'login.html';
+        window.location.href = 'login.html';
         return;
     }
 
@@ -8699,7 +8699,7 @@ async function showDashboard(element) {
     const username = localStorage.getItem('loggedInAdminUsername');
     if (!organisationName || !username) {
         alert('Please log in first!');
-        //window.location.href = 'login.html';
+        window.location.href = 'login.html';
         return;
     }
 
@@ -9197,7 +9197,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const organisationName = localStorage.getItem('loggedInOrganisationName');
     if (!organisationName) {
         console.warn('No organisation name found, redirecting to login');
-        //window.location.href = 'login.html';
+        window.location.href = 'login.html';
         return;
     }
 
