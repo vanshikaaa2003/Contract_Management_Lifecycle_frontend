@@ -9173,9 +9173,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize Supabase client
     if (!supabaseClient) {
         const { supabaseUrl, supabaseKey,openAiKey} = window.ENV;
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, {
-  global: { headers: { Accept: 'application/json' } }
-});
+        supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
         console.log('Supabase client initialized');
     }
 
