@@ -177,6 +177,7 @@
     <!-- Main JS -->
     <script src="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/js/main.js"></script>
     <!-- Custom Script -->
+    <script src="config.js"></script>
     <script>
         let supabaseLoaded = false;
         let allOrgs = [];
@@ -491,9 +492,7 @@
         }
 
         function initializeApp() {
-            const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-            const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
+            const { supabaseUrl, supabaseKey } = window.ENV;
             const dashboardLink = document.getElementById('dashboardLink');
             const dashboardSection = document.getElementById('dashboardSection');
             const orgFilter = document.getElementById('orgFilter');

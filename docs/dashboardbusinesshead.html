@@ -426,6 +426,7 @@ hr.my-4 {
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="config.js"></script>
     <!-- Application Logic -->
     <script>
         let supabaseClient;
@@ -456,8 +457,7 @@ hr.my-4 {
 
         async function initializeApp() {
     console.log('Starting app initialization');
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const { supabaseUrl, supabaseKey } = window.ENV;
     supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, {
         fetch: (...args) => fetch(...args, { headers: { 'Accept': 'application/json' } })
     });

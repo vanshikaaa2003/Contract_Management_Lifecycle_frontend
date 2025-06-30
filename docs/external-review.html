@@ -56,9 +56,9 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const { supabaseUrl, supabaseKey } = window.ENV;
             const supabaseClient = supabase.createClient(
-                import.meta.env.VITE_SUPABASE_URL,
-                import.meta.env.VITE_SUPABASE_ANON_KEY
+                supabaseUrl, supabaseKey
             );
             let currentOtp = null;
             let contractData = null;

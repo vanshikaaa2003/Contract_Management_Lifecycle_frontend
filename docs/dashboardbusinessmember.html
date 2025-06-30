@@ -14,6 +14,7 @@
     <!-- Suppress favicon error -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
     <link rel="icon" href="data:,">
+    <script src="config.js"></script>
     <style>
         .editor-container {
             border: 1px solid #ced4da;
@@ -456,8 +457,7 @@ hr.my-4 {
 
         async function initializeApp() {
     console.log('Starting app initialization');
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-    const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const { supabaseUrl, supabaseKey } = window.ENV;
     supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, {
         fetch: (...args) => fetch(...args, { headers: { 'Accept': 'application/json' } })
     });

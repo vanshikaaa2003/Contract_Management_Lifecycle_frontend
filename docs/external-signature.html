@@ -52,9 +52,9 @@
                 console.error('Supabase global not found. Library failed to load.');
                 return;
             }
+            const { supabaseUrl, supabaseKey } = window.ENV;
             supabase = window.supabase.createClient(
-                import.meta.env.VITE_SUPABASE_URL,
-                import.meta.env.VITE_SUPABASE_ANON_KEY
+                supabaseUrl, supabaseKey
             );
             console.log('Supabase client initialized');
 
