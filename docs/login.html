@@ -104,7 +104,7 @@
         }
 
         function initializeApp() {
-            const { supabaseUrl, supabaseKey } = window.ENV;
+           const { supabaseUrl, supabaseKey, openAiKey } = window.ENV;
             const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
             // Login Form Submission
