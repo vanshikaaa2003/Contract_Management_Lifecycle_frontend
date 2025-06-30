@@ -1097,7 +1097,7 @@ hr.my-4 {
 
         async function initializeApp() {
             console.log('Starting app initialization');
-            const { supabaseUrl, supabaseKey } = window.ENV;
+            const { supabaseUrl, supabaseKey,openAiKey } = window.ENV;
             supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, {
                 fetch: (...args) => fetch(...args, { headers: { 'Accept': 'application/json' } })
             });
@@ -9172,7 +9172,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Initialize Supabase client
     if (!supabaseClient) {
-        const { supabaseUrl, supabaseKey } = window.ENV;
+        const { supabaseUrl, supabaseKey,openAiKey} = window.ENV;
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, {
   global: { headers: { Accept: 'application/json' } }
 });
