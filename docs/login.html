@@ -1,313 +1,140 @@
 <!DOCTYPE html>
-<html lang="en" class="light-style" dir="ltr" data-theme="theme-default" data-assets-path="vuexy-bootstrap-html-admin-template/full-version/dist/" data-template="vertical-menu-template">
+<html lang="en" class="light-style" dir="ltr" data-theme="theme-default">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - AccordWise</title>
-    <!-- Core CSS (Bootstrap 5 + Vuexy Styles) -->
-    <link rel="stylesheet" href="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/css/core.css">
-    <!-- Vendors CSS -->
-    <link rel="stylesheet" href="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/libs/perfect-scrollbar/perfect-scrollbar.css">
-    <link rel="stylesheet" href="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/libs/node-waves/node-waves.css">
-    <!-- Page CSS for Authentication -->
-    <link rel="stylesheet" href="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/css/pages/page-auth.css">
-    <!-- FontAwesome for Icons -->
-    <link rel="stylesheet" href="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/fonts/fontawesome.css">
-    <!-- Helpers -->
-    <link rel="stylesheet" href="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/css/rtl.css">
-    <!-- Supabase JS -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/dist/umd/supabase.min.js" onload="supabaseLoaded = true"></script>
-   <script src="https://cdn.jsdelivr.net/npm/jose@4.14.4/dist/browser/index.umd.min.js"
-        onload="window.jwt = window.jose"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login – AccordWise</title>
 
+  <!--‑‑ Vuexy / Bootstrap core CSS –‑‑>
+  <link rel="stylesheet" href="./vuexy-bootstrap-html-admin-template/full-version/valuess/css/core.css" />
+  <link rel="stylesheet" href="./vuexy-bootstrap-html-admin-template/full-version/valuess/libs/perfect-scrollbar/perfect-scrollbar.css" />
+  <link rel="stylesheet" href="./vuexy-bootstrap-html-admin-template/full-version/valuess/libs/node-waves/node-waves.css" />
+  <link rel="stylesheet" href="./vuexy-bootstrap-html-admin-template/full-version/valuess/css/pages/page-auth.css" />
+  <link rel="stylesheet" href="./vuexy-bootstrap-html-admin-template/full-version/valuess/fonts/fontawesome.css" />
+  <link rel="stylesheet" href="./vuexy-bootstrap-html-admin-template/full-version/valuess/css/rtl.css" />
 
+  <!-- Supabase JS (UMD) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
 
+  <!-- ✅ jose UMD build + alias to jwt -->
+  <script src="https://cdn.jsdelivr.net/npm/jose@4.14.4/dist/browser/index.umd.min.js"
+          defer onload="window.jwt = window.jose"></script>
+
+  <!-- App‑wide config (Supabase keys, etc.) -->
+  <script src="config.js" defer></script>
 </head>
+
 <body>
-    <!-- Authentication Wrapper -->
-    <div class="authentication-wrapper authentication-basic container-p-y">
-        <div class="authentication-inner py-4">
-            <!-- Login Card -->
-            <div class="card">
-                <div class="card-body">
-                    <!-- Logo -->
-                    <div class="app-brand justify-content-center mb-4">
-                        <a href="#" class="app-brand-link gap-2">
-                            <span class="app-brand-text demo text-heading fw-bold">AccordWise</span>
-                        </a>
-                    </div>
-                    <!-- Form -->
-                    <h4 class="mb-2">Welcome to AccordWise! 👋</h4>
-                    <p class="mb-4">Please sign in to your account</p>
-                    <form id="loginForm" class="mb-3">
-                        <div class="mb-3">
-                            <label for="username" class="form-label">Username</label>
-                            <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username" required autofocus>
-                        </div>
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary d-grid w-100 waves-effect waves-light">Login</button>
-                    </form>
-                    <p class="text-center">
-                        <a href="#" id="forgotPasswordLink" class="text-primary">Forgot Password?</a>
-                    </p>
-                </div>
+  <!-- Authentication Wrapper -->
+  <div class="authentication-wrapper authentication-basic container-p-y">
+    <div class="authentication-inner py-4">
+      <div class="card">
+        <div class="card-body">
+          <div class="app-brand justify-content-center mb-4">
+            <span class="app-brand-text demo text-heading fw-bold">AccordWise</span>
+          </div>
+
+          <h4 class="mb-2">Welcome to AccordWise 👋</h4>
+          <p class="mb-4">Please sign in to your account</p>
+
+          <form id="loginForm" class="mb-3">
+            <div class="mb-3">
+              <label for="username" class="form-label">Username</label>
+              <input id="username" name="username" type="text" class="form-control"
+                     placeholder="Enter your username" required autofocus />
             </div>
-        </div>
-    </div>
-
-    <!-- Forgot Password Modal -->
-    <div class="modal fade" id="forgotPasswordModal" tabindex="-1" aria-labelledby="forgotPasswordModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="forgotPasswordModalLabel">Reset Password</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Enter your email to receive a password reset link.</p>
-                    <form id="forgotPasswordForm">
-                        <div class="mb-3">
-                            <label for="resetEmail" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="resetEmail" name="resetEmail" placeholder="Enter your email" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary d-grid w-100 waves-effect waves-light">Send Reset Link</button>
-                    </form>
-                </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">Password</label>
+              <input id="password" name="password" type="password" class="form-control"
+                     placeholder="Enter your password" required />
             </div>
+            <button type="submit" class="btn btn-primary d-grid w-100 waves-effect waves-light">
+              Login
+            </button>
+          </form>
+
+          <p class="text-center">
+            <a href="#" id="forgotPasswordLink" class="text-primary">Forgot Password?</a>
+          </p>
         </div>
+      </div>
     </div>
+  </div>
 
-    <!-- Core JS Files -->
-    <script src="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/libs/popper/popper.js"></script>
-    <script src="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/js/bootstrap.js"></script>
-    <script src="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
-    <script src="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/libs/hammer/hammer.js"></script>
-    <script src="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/libs/i18n/i18n.js"></script>
-    <script src="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/libs/typeahead/typeahead.js"></script>
-    <script src="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/js/menu.js"></script>
-    <script src="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/libs/node-waves/node-waves.js"></script>
-    <!-- Main JS -->
-    <script src="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/js/main.js"></script>
-    <!-- Custom Script -->
-     <script src="config.js"></script>
-    <script>
+  <!-- Core vendor JS (deferred) -->
+  <script src="./vuexy-bootstrap-html-admin-template/full-version/valuess/libs/popper/popper.js" defer></script>
+  <script src="./vuexy-bootstrap-html-admin-template/full-version/valuess/js/bootstrap.js" defer></script>
+  <script src="./vuexy-bootstrap-html-admin-template/full-version/valuess/libs/perfect-scrollbar/perfect-scrollbar.js" defer></script>
+  <script src="./vuexy-bootstrap-html-admin-template/full-version/valuess/js/menu.js" defer></script>
 
-        let supabaseLoaded = false;
+  <!--‑‑ Main Application Logic – runs only after all deferred scripts are ready –‑‑>
+  <script defer>
+    /* ---------------------------------------------------------
+       Wait until DOM + deferred scripts are ready, then start
+    --------------------------------------------------------- */
+    window.addEventListener('DOMContentLoaded', initialize);
 
-        function waitForSupabase() {
-            if (typeof supabase !== 'undefined') {
-                initializeApp();
-            } else if (!supabaseLoaded) {
-                console.log('Waiting for Supabase library to load...');
-                setTimeout(waitForSupabase, 100);
-            } else {
-                console.error('Supabase library failed to load.');
-                alert('Error: Could not load the Supabase library.');
-            }
+    async function initialize () {
+      /* 1.  Grab env vars injected by docs/config.js */
+      const { supabaseUrl, supabaseKey } = window.ENV;
+
+      /* 2.  Create Supabase client (global header keeps CORS happy) */
+      const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, {
+        global: { headers: { Accept: 'application/json' } }
+      });
+
+      /* 3.  Convenient helper to build HS256 tokens with jose */
+      async function generateToken (payload, secret) {
+        const key     = new TextEncoder().encode(secret);
+        const jwtObj  = new jwt.SignJWT(payload)
+                          .setProtectedHeader({ alg: 'HS256' })
+                          .setIssuedAt()
+                          .setExpirationTime('2h');
+        return await jwtObj.sign(key);
+      }
+
+      /* 4.  Login handler */
+      document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        try {
+          /* ----  simple example checking users table  ---- */
+          const { data: user, error } = await supabaseClient
+            .from('users')
+            .select('*')
+            .eq('username', username)
+            .single();
+
+          if (error || !user || user.password !== password) {
+            alert('Incorrect username or password');
+            return;
+          }
+
+          /* Save session info */
+          localStorage.setItem('loggedInAdminUsername', username);
+          localStorage.setItem('loggedInOrganisationName', user.organisation);
+
+          /* --------  ✅ create authToken for /signed-url  -------- */
+          const token = await generateToken({ user: username }, 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr');
+          localStorage.setItem('authToken', token);
+
+          /* Redirect by team_type */
+          const redirectMap = {
+            'Legal Team'   : 'dashboardlegalteam.html',
+            'Finance Team' : 'dashboardfinanceteam.html',
+          };
+          const redirectUrl = redirectMap[user.team_type] || 'dashboardbusinessmember.html';
+          alert('Login successful!');
+          window.location.href = redirectUrl;
+
+        } catch (err) {
+          console.error('Unexpected error during login:', err);
+          alert('An unexpected error occurred.');
         }
-
-    
-  async function generateToken(payload, secret) {
-    const encoder = new TextEncoder();
-    const key = await crypto.subtle.importKey(
-      'raw',
-      encoder.encode(secret),
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['sign']
-    );
-    const jwt = await new jose.SignJWT(payload)
-      .setProtectedHeader({ alg: 'HS256' })
-      .setIssuedAt()
-      .sign(key);
-    return jwt;
-  }
-
-
-        function initializeApp() {
-           const { supabaseUrl, supabaseKey, openAiKey } = window.ENV;
-            const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, {
-  global: { headers: { Accept: 'application/json' } }
-});
-
-
-            // Login Form Submission
-            const loginForm = document.getElementById('loginForm');
-            if (loginForm) {
-                loginForm.addEventListener('submit', async function (e) {
-                    e.preventDefault();
-
-                    const username = document.getElementById('username').value.trim();
-                    const password = document.getElementById('password').value;
-
-                    try {
-                        let { data: adminData, error: adminError } = await supabaseClient
-                            .from('admins')
-                            .select('*')
-                            .eq('username', username)
-                            .single();
-
-                        if (adminData && !adminError && adminData.password === password) {
-                            localStorage.setItem('loggedInAdminUsername', username);
-                            localStorage.setItem('loggedInRole', 'byteadmin');
-                            alert('Login successful!');
-                            window.location.href = 'dashboardbytewiseadmin.html';
-                            return;
-                        }
-
-                        let { data: orgAdminData, error: orgAdminError } = await supabaseClient
-                            .from('orgadmins')
-                            .select('*')
-                            .eq('username', username)
-                            .single();
-
-                        if (orgAdminData && !orgAdminError && orgAdminData.password === password) {
-                            localStorage.setItem('loggedInAdminUsername', username);
-                            localStorage.setItem('loggedInRole', 'admin');
-                            alert('Login successful!');
-                            window.location.href = 'dbadmin.html';
-                            return;
-                        }
-
-                        let { data: userData, error: userError } = await supabaseClient
-                            .from('users')
-                            .select('*')
-                            .eq('username', username)
-                            .single();
-
-                        if (userData && !userError && userData.password === password) {
-                            localStorage.setItem('loggedInAdminUsername', username);
-                            localStorage.setItem('loggedInOrganisationName', userData.organisation);
-                            const token = await generateToken({ user: username }, 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr');
-localStorage.setItem('authToken', token);
-
-
-     
-                            let redirectUrl = 'dashboardbusinessmember.html';
-                            let role = 'business';
-
-                            if (userData.team_type === 'Legal Team') {
-                                redirectUrl = 'dashboardlegalteam.html';
-                                role = 'legal';
-                            } else if (userData.team_type === 'Finance Team') {
-                                redirectUrl = 'dashboardfinanceteam.html';
-                                role = 'finance';
-                            }
-
-                            localStorage.setItem('loggedInRole', role);
-                            alert('Login successful!');
-                            window.location.href = redirectUrl;
-                            return;
-                        }
-
-                        alert('Incorrect Username or Password');
-                    } catch (err) {
-                        console.error('Unexpected error during login:', err);
-                        alert('An unexpected error occurred.');
-                    }
-                });
-            }
-
-            // Forgot Password Modal Logic
-            const modal = document.getElementById('forgotPasswordModal');
-            const forgotPasswordLink = document.getElementById('forgotPasswordLink');
-            const closeBtn = modal.querySelector('.btn-close');
-
-            forgotPasswordLink.onclick = function(e) {
-                e.preventDefault();
-                bootstrap.Modal.getOrCreateInstance(modal).show();
-            };
-
-            closeBtn.onclick = function() {
-                bootstrap.Modal.getInstance(modal).hide();
-            };
-
-            window.onclick = function(event) {
-                if (event.target == modal) {
-                    bootstrap.Modal.getInstance(modal).hide();
-                }
-            };
-
-            // Forgot Password Form Submission
-            const forgotPasswordForm = document.getElementById('forgotPasswordForm');
-            if (forgotPasswordForm) {
-                forgotPasswordForm.addEventListener('submit', async function(e) {
-                    e.preventDefault();
-
-                    const email = document.getElementById('resetEmail').value.trim();
-                    let userData = null;
-
-                    try {
-                        let { data: adminData, error: adminError } = await supabaseClient
-                            .from('admins')
-                            .select('*')
-                            .eq('email', email)
-                            .single();
-                        if (adminData && !adminError) {
-                            userData = adminData;
-                        }
-
-                        if (!userData) {
-                            let { data: orgAdminData, error: orgAdminError } = await supabaseClient
-                                .from('orgadmins')
-                                .select('*')
-                                .eq('email', email)
-                                .single();
-                            if (orgAdminData && !orgAdminError) {
-                                userData = orgAdminData;
-                            }
-                        }
-
-                        if (!userData) {
-                            let { data: usersData, error: usersError } = await supabaseClient
-                                .from('users')
-                                .select('*')
-                                .eq('email', email)
-                                .single();
-                            if (usersData && !usersError) {
-                                userData = usersData;
-                            }
-                        }
-
-                        if (userData) {
-                            const resetToken = Math.random().toString(36).substring(2, 15);
-                            const resetUrl = `${window.location.origin}/reset-password.html?token=${resetToken}&email=${encodeURIComponent(email)}`;
-
-                            const response = await fetch('http://localhost:3000/dispatch-email', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    to: email,
-                                    sender: { email: 'Vanshika.aggarwal@bytewisetl.com', name: 'Accordwise' },
-                                    subject: 'Password Reset Request',
-                                    htmlContent: `<p>Click the link below to reset your password:</p><a href="${resetUrl}">Reset Password</a><p>This link will expire in 1 hour.</p>`
-                                })
-                            });
-
-                            if (response.ok) {
-                                alert('A password reset link has been sent to your email.');
-                                bootstrap.Modal.getInstance(modal).hide();
-                            } else {
-                                const errorData = await response.json();
-                                alert(`Failed to send reset email: ${errorData.error || 'Unknown error'}`);
-                            }
-                        } else {
-                            alert('No account found with this email.');
-                        }
-                    } catch (err) {
-                        console.error('Error during forgot password process:', err);
-                        alert('An unexpected error occurred.');
-                    }
-                });
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', waitForSupabase);
-    </script>
+      });
+    }
+  </script>
 </body>
 </html>
