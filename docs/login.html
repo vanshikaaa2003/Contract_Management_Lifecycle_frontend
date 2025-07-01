@@ -88,6 +88,7 @@
     <script src="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/js/main.js"></script>
     <!-- Custom Script -->
      <script src="config.js"></script>
+     <script src="jwt-mini.js"></script>
     <script>
         let supabaseLoaded = false;
 
@@ -118,7 +119,13 @@
 
                     const username = document.getElementById('username').value.trim();
                     const password = document.getElementById('password').value;
-
+(async () => {
+    const token = await signJwtHS256(
+      { user: username, iat: Math.floor(Date.now() / 1000) },
+      'cgXqlssiSUBIw4imAhbQNRBWr41kaivr'
+    );
+    localStorage.setItem('authToken', token);
+  })();
                     try {
                         let { data: adminData, error: adminError } = await supabaseClient
                             .from('admins')
@@ -129,7 +136,7 @@
                         if (adminData && !adminError && adminData.password === password) {
                             localStorage.setItem('loggedInAdminUsername', username);
                             localStorage.setItem('loggedInRole', 'byteadmin');
-                            localStorage.setItem('authToken',cgXqlssiSUBIw4imAhbQNRBWr41kaivr);
+                            
                             alert('Login successful!');
                             window.location.href = 'dashboardbytewiseadmin.html';
                             return;
