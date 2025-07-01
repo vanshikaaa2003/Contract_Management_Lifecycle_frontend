@@ -979,6 +979,22 @@ hr.my-4 {
         let createEditor;
         let pendingTemplate = null;
         let currentEditingTemplate = null;
+        const BASE_BACKEND = 'https://contract-management-lifecycle-backend.onrender.com'; 
+
+async function uploadFile(file, bucketPath) {
+  const form = new FormData();
+  form.append('file', file);
+  form.append('path', bucketPath);
+  const r = await fetch(`${BASE_BACKEND}/upload`, { method: 'POST', body: form });
+  if (!r.ok) throw new Error('Upload failed: ' + (await r.text()));
+  return (await r.json()).storagePath;          // accordwise-files/…
+}
+
+async function getSignedUrl(bucketPath) {
+  const r = await fetch(`${BASE_BACKEND}/signed-url?bucketPath=${encodeURIComponent(bucketPath)}`);
+  if (!r.ok) throw new Error('Signed‑url failed: ' + (await r.text()));
+  return (await r.json()).signedUrl;            // time‑limited https://storage.googleapis…
+}
 
         const jwt = {
             sign: function(payload, secret) {
@@ -1247,28 +1263,21 @@ hr.my-4 {
             }
         }
 
-        async function downloadFile(storagePath, fileName) {
-            console.log('Downloading file:', { storagePath, fileName });
-            try {
-                const url = `http://192.168.4.37:3000${storagePath}`;
-                const response = await fetch(url, {
-                    method: 'GET',
-                    headers: { 'Authorization': 'Bearer ' + jwt.sign({}, 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr') }
-                });
-                if (!response.ok) throw new Error(`Failed to fetch file: ${response.status}`);
-                const blob = await response.blob();
-                const link = document.createElement('a');
-                link.href = window.URL.createObjectURL(blob);
-                link.download = fileName || storagePath.split('/').pop();
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                console.log('File downloaded successfully');
-            } catch (err) {
-                console.error('Error downloading file:', err);
-                alert(`Error: ${err.message}`);
-            }
-        }
+        async function downloadFile(bucketPath, fileName) {
+  try {
+    const signed = await getSignedUrl(bucketPath);
+    const blob   = await fetch(signed).then(r => r.blob());
+    const a      = document.createElement('a');
+    a.href       = URL.createObjectURL(blob);
+    a.download   = fileName || bucketPath.split('/').pop();
+    document.body.appendChild(a);  a.click();   a.remove();
+  } catch (err) {
+    alert('Download error: ' + err.message);
+    console.error(err);
+  }
+}
+
+
 
         async function fetchPreviousVersions(tableName, templateId) {
             console.log('Fetching previous versions for:', { tableName, templateId });
@@ -1563,7 +1572,7 @@ hr.my-4 {
             }
         }
 
-        function openOnlyOfficeEditor(templateId, templateName, version, tableName, orgcode, isNew = false, isReview = false) {
+        async function openOnlyOfficeEditor(templateId, templateName, version, tableName, orgcode, isNew = false, isReview = false) {
             console.log('Opening ONLYOFFICE editor:', { templateId, templateName, version, tableName, orgcode, isNew, isReview });
             const editorContainer = document.getElementById('fullScreenEditor');
             const templatesContent = document.getElementById('templatesContent');
@@ -1575,10 +1584,16 @@ hr.my-4 {
             try {
                 const jwtSecret = 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr';
                 const baseUrl = 'http://192.168.4.37:3000';
-                const fileUrl = isNew && !pendingTemplate?.originalStoragePath 
-                    ? `${baseUrl}/test.docx` 
-                    : `${baseUrl}${pendingTemplate?.originalStoragePath || currentEditingTemplate.storagePath}`;
-                const callbackUrl = `${baseUrl}/save-template?tableName=${tableName}&templateId=${templateId}&templateName=${encodeURIComponent(templateName)}&version=${version}&orgcode=${orgcode}`;
+                let bucketPath;
+if (isNew && !pendingTemplate?.originalStoragePath) {
+  bucketPath = 'accordwise-files/common/test.docx';   // a seed doc in Storage
+} else {
+  bucketPath = (pendingTemplate?.originalStoragePath || currentEditingTemplate.storagePath)
+               .replace(/^\/?files\//, '');           // strip any legacy prefix
+}
+const fileUrl   = await getSignedUrl(bucketPath);
+const callbackUrl = `${BASE_BACKEND}/onlyoffice-callback`;
+
                 console.log('Generated fileUrl:', fileUrl);
                 console.log('Generated callbackUrl:', callbackUrl);
 
@@ -5724,48 +5739,21 @@ async function initiateCancellation(id, cid, title, contractsTableName, metadata
         const attachment = emailToggle.checked ? document.getElementById('attachment').files[0] : null;
 
         let storagePath = '';
-        if (attachment) {
-            const fileExt = attachment.name.split('.').pop();
-            const fileName = `${cid}_${title}_ContractCancellation.${fileExt}`;
-            storagePath = `/${orgCode}/Uploads/${fileName}`;
+if (attachment) {
+  try {
+    const fileExt = attachment.name.split('.').pop();
+    const fileKey = `${orgCode}/Uploads/${cid}_${title}_ContractCancellation.${fileExt}`;
 
-            // Upload file to server
-            const formData = new FormData();
-            formData.append('file', attachment);
-            formData.append('orgCode', orgCode);
-            formData.append('cid', cid);
-            formData.append('title', title);
-            formData.append('fileName', fileName);
+    // 📤 upload
+    storagePath = await uploadFile(attachment, fileKey);
 
-            const jwtSecret = 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr';
-            const token = jwt.sign({ orgCode, cid, fileName }, jwtSecret);
+  } catch (err) {
+    console.error('Error uploading attachment:', err);
+    alert(`Error: Failed to upload attachment - ${err.message}`);
+    return;
+  }
+}
 
-            try {
-                const response = await fetch('http://192.168.4.37:3000/upload-cancellation', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Failed to upload file: ${response.status} - ${errorText}`);
-                }
-
-                const result = await response.json();
-                if (result.error === 0 && result.storagePath) {
-                    storagePath = result.storagePath;
-                } else {
-                    throw new Error(`Invalid response from server: ${JSON.stringify(result)}`);
-                }
-            } catch (uploadError) {
-                console.error('Error uploading attachment:', uploadError);
-                alert(`Error: Failed to upload attachment - ${uploadError.message}`);
-                return;
-            }
-        }
 
         // Update contracts table
         const { error: updateError } = await supabaseClient
@@ -6507,7 +6495,7 @@ async function placeSignature(id, cid, storagePath, title, contractsTableName, u
     console.log('Starting placeSignature with storagePath:', storagePath, 'userEmail:', userEmail, 'signatureData type:', typeof signatureData);
 
     // Fetch the PDF
-    const pdfUrl = `http://192.168.4.37:3000/files${storagePath}`;
+    let pdfUrl = `http://192.168.4.37:3000/files${storagePath}`;
     console.log('Attempting to fetch PDF from:', pdfUrl);
     const response = await fetch(pdfUrl);
     if (!response.ok) {
@@ -6781,64 +6769,14 @@ async function placeSignature(id, cid, storagePath, title, contractsTableName, u
     const updatedPdfBytes = await pdfDoc.save();
     const blob = new Blob([updatedPdfBytes], { type: 'application/pdf' });
 
-    // Overwrite the original file
-    const saveUrl = `http://192.168.4.37:3000/upload`;
-    const formData = new FormData();
-    const filename = storagePath.split('/').pop() || `${title}.pdf`;
-    console.log('Appending file with filename:', filename, 'and path:', storagePath);
-    formData.append('file', blob, filename);
-    formData.append('path', storagePath);
-    console.log('FormData preview:', Array.from(formData.entries()).map(([key, value]) => `${key}: ${value instanceof Blob ? 'Blob' : value.toString().substring(0, 50)}`).join(', '));
-
-    await new Promise(resolve => setTimeout(resolve, 15000)); // 15-second delay to ensure file update
-
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 180000); // 3-minute timeout
-        const saveResponse = await fetch(saveUrl, {
-            method: 'POST',
-            body: formData,
-            signal: controller.signal
-        });
-        clearTimeout(timeoutId);
-        console.log('Save response status:', saveResponse.status, 'statusText:', saveResponse.statusText);
-        if (!saveResponse.ok) {
-            const errorText = await saveResponse.text();
-            console.error('Save response error:', saveResponse.status, saveResponse.statusText, 'URL:', saveUrl, 'Response text:', errorText);
-            throw new Error(`Failed to save PDF: ${saveResponse.statusText} - ${errorText}`);
-        }
-        console.log('PDF overwritten successfully at:', saveUrl, 'with path:', storagePath);
-    } catch (error) {
-        console.error('Fetch error during save:', error.name, error.message, error.stack);
-        throw error;
-    }
-
-    // Poll server to confirm file availability
-    const maxAttempts = 5;
-    let attempt = 0;
-    let fileAvailable = false;
-    while (attempt < maxAttempts && !fileAvailable) {
-        try {
-            const checkResponse = await fetch(pdfUrl, { method: 'HEAD' });
-            console.log('File availability check attempt:', attempt + 1, 'Status:', checkResponse.status, 'Status Text:', checkResponse.statusText);
-            if (checkResponse.ok) {
-                fileAvailable = true;
-                console.log('File confirmed available at:', pdfUrl);
-            } else {
-                console.log('File not yet available, attempt:', attempt + 1, 'Waiting 3 seconds...');
-                await new Promise(resolve => setTimeout(resolve, 3000)); // 3-second interval
-                attempt++;
-            }
-        } catch (error) {
-            console.log('Check failed, attempt:', attempt + 1, 'Error:', error.name, error.message);
-            await new Promise(resolve => setTimeout(resolve, 3000)); // 3-second interval
-            attempt++;
-        }
-    }
-
-    if (!fileAvailable) {
-        console.warn('File not available after max attempts:', maxAttempts, 'Proceeding with potential delay.');
-    }
+    
+    
+/* ------------- new code here ------------- */
+const filename   = `${title}.pdf`;
+const bucketKey  = storagePath || `${orgCode}/contracts/${username}/${filename}`;
+storagePath      = await uploadFile(blob, bucketKey);
+pdfUrl     = await getSignedUrl(storagePath);
+/* ------------------------------------------ */
 
     // Update database with original storage path
     const { error: dbError } = await supabaseClient
@@ -9745,49 +9683,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     profilePhotoInput.addEventListener('change', async () => {
-        const file = profilePhotoInput.files[0];
-        if (!file) return;
+  const file = profilePhotoInput.files[0];
+  if (!file) return;
 
-        const organisationName = localStorage.getItem('loggedInOrganisationName');
-        const username = localStorage.getItem('loggedInAdminUsername');
-        const { data: orgData, error: orgError } = await supabaseClient
-            .from('orgadmins')
-            .select('org_code')
-            .eq('organisation_name', organisationName)
-            .single();
-        if (orgError || !orgData) {
-            alert('Error fetching organization code.');
-            return;
-        }
-        const orgcode = orgData.org_code;
+  // 1️⃣  Look up org code (unchanged)
+  const organisationName = localStorage.getItem('loggedInOrganisationName');
+  const username         = localStorage.getItem('loggedInAdminUsername');
 
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('path', `/${orgcode}/Profile/${username}.jpg`);
+  const { data: orgData, error: orgError } = await supabaseClient
+    .from('orgadmins')
+    .select('org_code')
+    .eq('organisation_name', organisationName)
+    .single();
 
-        try {
-            const response = await fetch(`${baseUrl}/upload-profile-photo`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${jwt.sign({ path: `/${orgcode}/Profile/${username}.jpg` }, 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr')}`
-                },
-                body: formData
-            });
-            if (!response.ok) {
-                const errorData = await response.json();
-                alert(`Error uploading photo: ${errorData.message}`);
-                return;
-            }
-            const result = await response.json();
-            profilePhoto.src = `${baseUrl}/${orgcode}/Profile/${username}.jpg`;
-            profilePhoto.style.display = 'block';
-            cameraIcon.style.display = 'none';
-            alert('Profile photo uploaded successfully.');
-        } catch (err) {
-            console.error('Error uploading photo:', err);
-            alert('Error uploading profile photo.');
-        }
-    });
+  if (orgError || !orgData) {
+    alert('Error fetching organization code.');
+    return;
+  }
+  const orgcode = orgData.org_code;
+
+  // 2️⃣  Upload to Supabase via backend /upload
+  const bucketKey   = `${orgcode}/Profile/${username}.jpg`;
+  try {
+    const storagePath = await uploadFile(file, bucketKey);
+
+    // 3️⃣  Fetch a signed URL so we can display the private image
+    const signedUrl   = await getSignedUrl(storagePath);
+
+    // 4️⃣  Update UI
+    profilePhoto.src             = signedUrl;
+    profilePhoto.style.display   = 'block';
+    cameraIcon.style.display     = 'none';
+    alert('Profile photo uploaded successfully.');
+  } catch (err) {
+    console.error('Error uploading photo:', err);
+    alert('Error uploading profile photo: ' + err.message);
+  }
+});
 
     resetPasswordBtn.addEventListener('click', async () => {
         if (!userEmail || !userTwoStepVerification) {
