@@ -93,6 +93,7 @@
     <!-- Custom Script -->
      <script src="config.js"></script>
     <script>
+
         let supabaseLoaded = false;
 
         function waitForSupabase() {
@@ -106,6 +107,24 @@
                 alert('Error: Could not load the Supabase library.');
             }
         }
+
+    
+  async function generateToken(payload, secret) {
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    const jwt = await new jose.SignJWT(payload)
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .sign(key);
+    return jwt;
+  }
+
 
         function initializeApp() {
            const { supabaseUrl, supabaseKey, openAiKey } = window.ENV;
@@ -161,11 +180,9 @@
                         if (userData && !userError && userData.password === password) {
                             localStorage.setItem('loggedInAdminUsername', username);
                             localStorage.setItem('loggedInOrganisationName', userData.organisation);
-                            const token = await new jwt.SignJWT({ user: username })
-  .setProtectedHeader({ alg: 'HS256' })
-  .setIssuedAt()
-  .sign(new TextEncoder().encode('cgXqlssiSUBIw4imAhbQNRBWr41kaivr'));
+                            const token = await generateToken({ user: username }, 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr');
 localStorage.setItem('authToken', token);
+
 
      
                             let redirectUrl = 'dashboardbusinessmember.html';
