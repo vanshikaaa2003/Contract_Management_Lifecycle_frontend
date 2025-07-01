@@ -991,10 +991,14 @@ async function uploadFile(file, bucketPath) {
 }
 
 async function getSignedUrl(bucketPath) {
-  const r = await fetch(`${BASE_BACKEND}/signed-url?bucketPath=${encodeURIComponent(bucketPath)}`);
-  if (!r.ok) throw new Error('Signed‑url failed: ' + (await r.text()));
-  return (await r.json()).signedUrl;            // time‑limited https://storage.googleapis…
+  const token = localStorage.getItem('authToken');
+  const r = await fetch(
+    `${BASE_BACKEND}/signed-url?bucketPath=${encodeURIComponent(bucketPath)}&token=${token}`
+  );
+  if (!r.ok) throw new Error('Signed‑url failed: ' + await r.text());
+  return (await r.json()).signedUrl;
 }
+
 
         const jwt = {
             sign: function(payload, secret) {

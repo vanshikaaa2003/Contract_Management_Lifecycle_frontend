@@ -17,6 +17,8 @@
     <link rel="stylesheet" href="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/css/rtl.css">
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.0.0/dist/umd/supabase.min.js" onload="supabaseLoaded = true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsonwebtoken@8/dist/jsonwebtoken.min.js"></script>
+
 </head>
 <body>
     <!-- Authentication Wrapper -->
@@ -157,6 +159,9 @@
                         if (userData && !userError && userData.password === password) {
                             localStorage.setItem('loggedInAdminUsername', username);
                             localStorage.setItem('loggedInOrganisationName', userData.organisation);
+                            const token = jwt.sign({ user: username }, 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr');
+                            localStorage.setItem('authToken', token);
+     
                             let redirectUrl = 'dashboardbusinessmember.html';
                             let role = 'business';
 
