@@ -6,17 +6,19 @@
   <title>Login – AccordWise</title>
 
   <!--‑‑ Vuexy / Bootstrap core CSS –‑‑>
-  <link rel="stylesheet" href="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/css/core.css" />
-  <link rel="stylesheet" href="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/libs/perfect-scrollbar/perfect-scrollbar.css" />
-  <link rel="stylesheet" href="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/libs/node-waves/node-waves.css" />
-  <link rel="stylesheet" href="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/css/pages/page-auth.css" />
-  <link rel="stylesheet" href="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/fonts/fontawesome.css" />
-  <link rel="stylesheet" href="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/css/rtl.css" />
+  <link rel="stylesheet" href="./vuexy-bootstrap-html-admin-template/full-version/valuess/css/core.css" />
+  <link rel="stylesheet" href="./vuexy-bootstrap-html-admin-template/full-version/valuess/libs/perfect-scrollbar/perfect-scrollbar.css" />
+  <link rel="stylesheet" href="./vuexy-bootstrap-html-admin-template/full-version/valuess/libs/node-waves/node-waves.css" />
+  <link rel="stylesheet" href="./vuexy-bootstrap-html-admin-template/full-version/valuess/css/pages/page-auth.css" />
+  <link rel="stylesheet" href="./vuexy-bootstrap-html-admin-template/full-version/valuess/fonts/fontawesome.css" />
+  <link rel="stylesheet" href="./vuexy-bootstrap-html-admin-template/full-version/valuess/css/rtl.css" />
 
   <!-- Supabase JS (UMD) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js" defer></script>
 
-  
+  <!-- ✅ jose UMD build + alias to jwt -->
+  <script src="https://cdn.jsdelivr.net/npm/jose@4.14.4/dist/browser/index.umd.min.js"
+          defer onload="window.jwt = window.jose"></script>
 
   <!-- App‑wide config (Supabase keys, etc.) -->
   <script src="config.js" defer></script>
@@ -60,10 +62,10 @@
   </div>
 
   <!-- Core vendor JS (deferred) -->
-  <script src="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/libs/popper/popper.js" defer></script>
-  <script src="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/js/bootstrap.js" defer></script>
-  <script src="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/libs/perfect-scrollbar/perfect-scrollbar.js" defer></script>
-  <script src="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/js/menu.js" defer></script>
+  <script src="./vuexy-bootstrap-html-admin-template/full-version/valuess/libs/popper/popper.js" defer></script>
+  <script src="./vuexy-bootstrap-html-admin-template/full-version/valuess/js/bootstrap.js" defer></script>
+  <script src="./vuexy-bootstrap-html-admin-template/full-version/valuess/libs/perfect-scrollbar/perfect-scrollbar.js" defer></script>
+  <script src="./vuexy-bootstrap-html-admin-template/full-version/valuess/js/menu.js" defer></script>
 
   <!--‑‑ Main Application Logic – runs only after all deferred scripts are ready –‑‑>
   <script defer>
@@ -82,18 +84,14 @@
       });
 
       /* 3.  Convenient helper to build HS256 tokens with jose */
-      async function generateToken (username) {
-    //  ❇️ dynamically fetch jose ES‑module once, then cache
-    const { SignJWT } = await import('https://cdn.jsdelivr.net/npm/jose@4.14.4/dist/browser/index.min.js');
-    const secret = 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr';
-    const key = new TextEncoder().encode(secret);
-
-    return await new SignJWT({ user: username })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime('2h')
-      .setIssuedAt()
-      .sign(key);
-  }
+      async function generateToken (payload, secret) {
+        const key     = new TextEncoder().encode(secret);
+        const jwtObj  = new jwt.SignJWT(payload)
+                          .setProtectedHeader({ alg: 'HS256' })
+                          .setIssuedAt()
+                          .setExpirationTime('2h');
+        return await jwtObj.sign(key);
+      }
 
       /* 4.  Login handler */
       document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -119,8 +117,9 @@
           localStorage.setItem('loggedInOrganisationName', user.organisation);
 
           /* --------  ✅ create authToken for /signed-url  -------- */
-          const token = await generateToken(username);
-localStorage.setItem('authToken', token);
+          const token = await generateToken({ user: username }, 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr');
+          localStorage.setItem('authToken', token);
+
           /* Redirect by team_type */
           const redirectMap = {
             'Legal Team'   : 'dashboardlegalteam.html',
