@@ -1750,104 +1750,149 @@ const callbackUrl = `${BASE_BACKEND}/onlyoffice-callback`;
             }
         }
 
-        async function saveTemplateToDatabase(templateId, templateName, version, templatesTableName, documentsTableName, createdBy, orgcode) {
-            console.log('Starting saveTemplateToDatabase:', { templateId, templateName, version, templatesTableName, documentsTableName, createdBy, orgcode });
-            try {
-                console.log('Checking if templates table exists:', templatesTableName);
-                const { data: templatesTableExists, error: templatesCheckError } = await supabaseClient
-                    .rpc('check_templates_table_exists', { p_table_name: templatesTableName });
-                console.log('Templates table exists check:', { exists: templatesTableExists, error: templatesCheckError });
-                if (templatesCheckError) throw new Error(`Error checking templates table: ${templatesCheckError.message}`);
-                if (!templatesTableExists) {
-                    console.log('Templates table does not exist, creating:', templatesTableName);
-                    const { data: createData, error: createTemplatesError } = await supabaseClient.rpc('execute_templates_sql', {
-                        sql_statement: `
-                            CREATE TABLE ${templatesTableName} (
-                                id SERIAL PRIMARY KEY,
-                                template_id TEXT NOT NULL,
-                                template_name TEXT NOT NULL,
-                                version TEXT NOT NULL,
-                                last_updated_on TIMESTAMP DEFAULT NOW(),
-                                status TEXT DEFAULT 'draft',
-                                status_del INTEGER DEFAULT 1,
-                                storage_path TEXT
-                            );
-                        `
-                    });
-                    console.log('Table creation response:', { data: createData, error: createTemplatesError });
-                    if (createTemplatesError) throw new Error(`Failed to create templates table: ${createTemplatesError.message}`);
-                    console.log(`Created table: ${templatesTableName}`);
-                } else {
-                    console.log('Templates table already exists:', templatesTableName);
-                }
+        // ---------------------------------------------
+// REPLACE the whole old function with this one
+// ---------------------------------------------
+async function saveTemplateToDatabase(
+  templateId,
+  templateName,
+  version,
+  templatesTableName,
+  documentsTableName,
+  createdBy,
+  orgcode
+) {
+  console.log('Starting saveTemplateToDatabase:', {
+    templateId,
+    templateName,
+    version,
+    templatesTableName,
+    documentsTableName,
+    createdBy,
+    orgcode
+  });
 
-                console.log('Checking if documents table exists:', documentsTableName);
-                const { data: docsTableExists, error: docsCheckError } = await supabaseClient
-                    .rpc('check_templates_table_exists', { p_table_name: documentsTableName });
-                console.log('Documents table exists check:', { exists: docsTableExists, error: docsCheckError });
-                if (docsCheckError) throw new Error(`Error checking documents table: ${docsCheckError.message}`);
-                if (!docsTableExists) {
-                    console.log('Documents table does not exist, creating:', documentsTableName);
-                    const { error: createDocsError } = await supabaseClient.rpc('execute_templates_sql', {
-                        sql_statement: `
-                            CREATE TABLE ${documentsTableName} (
-                                id SERIAL PRIMARY KEY,
-                                document_name VARCHAR(255) NOT NULL,
-                                document_type VARCHAR(100),
-                                storage_path TEXT,
-                                created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                                updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-                                metadata JSONB,
-                                created_by VARCHAR(255)
-                            );
-                        `
-                    });
-                    console.log('Documents table creation response:', { error: createDocsError });
-                    if (createDocsError) throw new Error(`Failed to create documents table: ${createDocsError.message}`);
-                    console.log(`Created table: ${documentsTableName}`);
-                } else {
-                    console.log('Documents table already exists:', documentsTableName);
-                }
+  // Helper ────────────────────────────────────
+  const BUCKET = 'accordwise-files';
+  const bucketPath = (path) => `${BUCKET}/${path.replace(/^\/+/, '')}`;
 
-                const templateStoragePath = `/${orgcode}/templates/${templateId}_${templateName}_${version}.docx`;
-                const folderStoragePath = `/${orgcode}/templates`;
-                console.log('Storage paths calculated:', { templateStoragePath, folderStoragePath });
-
-                console.log('Inserting into templates table:', templatesTableName);
-                const { data: templateData, error: templatesInsertError } = await supabaseClient
-                    .from(templatesTableName)
-                    .insert({
-                        template_id: templateId,
-                        template_name: templateName,
-                        version: version,
-                        last_updated_on: new Date().toISOString(),
-                        status: 'draft',
-                        status_del: 1,
-                        storage_path: templateStoragePath
-                    });
-                console.log('Templates table insert response:', { data: templateData, error: templatesInsertError });
-                if (templatesInsertError) throw new Error(`Failed to insert into templates table: ${templatesInsertError.message || 'Unknown error'}`);
-
-                console.log('Inserting into documents table:', documentsTableName);
-                const { data: docsData, error: docsInsertError } = await supabaseClient
-                    .from(documentsTableName)
-                    .insert({
-                        document_name: `${orgcode}_templates`,
-                        document_type: 'folder',
-                        storage_path: folderStoragePath,
-                        metadata: JSON.stringify({ description: 'Folder for templates' }),
-                        created_by: createdBy
-                    });
-                console.log('Documents table insert response:', { data: docsData, error: docsInsertError });
-                if (docsInsertError) throw new Error(`Failed to insert into documents table: ${docsInsertError.message}`);
-
-                console.log('Template saved with storage_path:', templateStoragePath);
-                console.log('Folder metadata saved with storage_path:', folderStoragePath);
-            } catch (err) {
-                console.error('Error in saveTemplateToDatabase:', err);
-                alert(`Error: ${err.message}`);
-            }
+  try {
+    /* ---------- 1. Make sure the two tables exist (unchanged) ---------- */
+    const { data: templatesTableExists, error: templatesCheckError } =
+      await supabaseClient.rpc('check_templates_table_exists', {
+        p_table_name: templatesTableName
+      });
+    if (templatesCheckError)
+      throw new Error(
+        `Error checking templates table: ${templatesCheckError.message}`
+      );
+    if (!templatesTableExists) {
+      const { error: createErr } = await supabaseClient.rpc(
+        'execute_templates_sql',
+        {
+          sql_statement: `
+            CREATE TABLE ${templatesTableName} (
+              id SERIAL PRIMARY KEY,
+              template_id     TEXT NOT NULL,
+              template_name   TEXT NOT NULL,
+              version         TEXT NOT NULL,
+              last_updated_on TIMESTAMP DEFAULT NOW(),
+              status          TEXT DEFAULT 'draft',
+              status_del      INTEGER DEFAULT 1,
+              storage_path    TEXT
+            );`
         }
+      );
+      if (createErr)
+        throw new Error(
+          `Failed to create templates table: ${createErr.message}`
+        );
+    }
+
+    const { data: docsTableExists, error: docsCheckError } =
+      await supabaseClient.rpc('check_templates_table_exists', {
+        p_table_name: documentsTableName
+      });
+    if (docsCheckError)
+      throw new Error(
+        `Error checking documents table: ${docsCheckError.message}`
+      );
+    if (!docsTableExists) {
+      const { error: createDocsErr } = await supabaseClient.rpc(
+        'execute_templates_sql',
+        {
+          sql_statement: `
+            CREATE TABLE ${documentsTableName} (
+              id SERIAL PRIMARY KEY,
+              document_name VARCHAR(255) NOT NULL,
+              document_type VARCHAR(100),
+              storage_path  TEXT,
+              created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+              updated_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+              metadata      JSONB,
+              created_by    VARCHAR(255)
+            );`
+        }
+      );
+      if (createDocsErr)
+        throw new Error(
+          `Failed to create documents table: ${createDocsErr.message}`
+        );
+    }
+
+    /* ---------- 2. Build bucket‑prefixed paths ------------------------- */
+    const fileName = `${templateId}_${templateName}_${version}.docx`;
+    const templateStoragePath = bucketPath(`${orgcode}/templates/${fileName}`);
+    const folderStoragePath   = bucketPath(`${orgcode}/templates`);
+
+    console.log('Storage paths:', {
+      templateStoragePath,
+      folderStoragePath
+    });
+
+    /* ---------- 3. Insert the draft template row ----------------------- */
+    const { error: templatesInsertError } = await supabaseClient
+      .from(templatesTableName)
+      .insert({
+        template_id:   templateId,
+        template_name: templateName,
+        version,
+        last_updated_on: new Date().toISOString(),
+        status:        'draft',
+        status_del:    1,
+        storage_path:  templateStoragePath
+      });
+    if (templatesInsertError)
+      throw new Error(
+        `Failed to insert into templates table: ${templatesInsertError.message}`
+      );
+
+    /* ---------- 4. Insert / update folder metadata -------------------- */
+    const { error: docsInsertError } = await supabaseClient
+      .from(documentsTableName)
+      .insert({
+        document_name: `${orgcode}_templates`,
+        document_type: 'folder',
+        storage_path:  folderStoragePath,
+        metadata:      JSON.stringify({ description: 'Folder for templates' }),
+        created_by:    createdBy
+      });
+    if (docsInsertError)
+      throw new Error(
+        `Failed to insert into documents table: ${docsInsertError.message}`
+      );
+
+    console.log(
+      'Template & folder rows saved OK – paths:',
+      templateStoragePath,
+      folderStoragePath
+    );
+  } catch (err) {
+    console.error('Error in saveTemplateToDatabase:', err);
+    alert(`Error: ${err.message}`);
+  }
+}
+
 
         async function updateTemplateLastUpdated(templateId, tableName, storagePath) {
             console.log('Updating last_updated_on for template:', { templateId, tableName, storagePath });
