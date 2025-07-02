@@ -122,7 +122,7 @@
 (async () => {
     const token = await signJwtHS256(
       { user: username, iat: Math.floor(Date.now() / 1000) },
-      '90622eb052254ec9a1592d118d81b6c7'
+      'cgXqlssiSUBIw4imAhbQNRBWr41kaivr'
     );
     localStorage.setItem('authToken', token);
   })();
