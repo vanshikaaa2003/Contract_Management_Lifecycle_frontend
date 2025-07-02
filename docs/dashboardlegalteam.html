@@ -963,7 +963,7 @@ hr.my-4 {
     <script src="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/js/bootstrap.js"></script>
     <script src="/Contract_Management_Lifecycle_frontend/vuexy-bootstrap-html-admin-template/full-version/valuess/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-    <script src="https://kind-ambition-production-57fa.up.railway.app/web-apps/apps/api/documents/api.js"></script>
+    <script src="https://53a5fb97.docs.onlyoffice.com//web-apps/apps/api/documents/api.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
@@ -1587,7 +1587,7 @@ async function getSignedUrl(bucketPath) {
             editorContainer.style.display = 'block';
 
             try {
-                const jwtSecret = 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr';
+                const jwtSecret = '90622eb052254ec9a1592d118d81b6c7';
                 const baseUrl = 'http://192.168.4.37:3000';
                 let bucketPath;
 if (isNew && !pendingTemplate?.originalStoragePath) {
@@ -3275,7 +3275,7 @@ async function convertDocxToPdfAndUpdate(contractsTableName, cid) {
         }
 
         // Convert .docx to .pdf (only once)
-        const jwtSecret = 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr';
+        const jwtSecret = '90622eb052254ec9a1592d118d81b6c7';
         const token = jwt.sign({}, jwtSecret);
         console.log(`Converting .docx to .pdf: ${docxPath}`);
         const response = await fetch('http://192.168.4.37:3000/convert-to-pdf', {
@@ -3602,7 +3602,7 @@ async function showPdfEditor(cid, contractsTableName, containerElement) {
                     logToStorage(`Annotations prepared: ${JSON.stringify(annotations)}`);
 
                     // Send JSON payload
-                    const jwtSecret = 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr';
+                    const jwtSecret = '90622eb052254ec9a1592d118d81b6c7';
                     const token = jwt.sign({}, jwtSecret);
                     const response = await fetch('http://192.168.4.37:3000/annotate-pdf', {
                         method: 'POST',
@@ -4471,7 +4471,7 @@ async function openExtensionEditor(cid, storagePath, title, contractsTableName) 
     editorContainer.style.display = 'block';
 
     const baseUrl = 'http://192.168.4.37:3000';
-    const jwtSecret = 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr';
+    const jwtSecret = '90622eb052254ec9a1592d118d81b6c7';
     
     // Generate new filename with _v2 for DOCX
     const pathParts = storagePath.split('/');
@@ -4858,7 +4858,7 @@ async function informParties(cid, title, accountname, requested_by, requested_te
         console.log('Logged-in user email:', ccEmail);
 
         // Step 5: Send email via server endpoint
-        const jwtSecret = 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr';
+        const jwtSecret = '90622eb052254ec9a1592d118d81b6c7';
         console.log('Generating JWT token');
         const token = jwt.sign({ cid, organisationName }, jwtSecret);
         console.log('JWT token generated:', token.slice(0, 20) + '...');
@@ -5487,7 +5487,7 @@ async function openModificationReviewDocument(id, cid, storagePath, title, contr
     editorContainer.style.display = 'block';
 
     const baseUrl = 'http://192.168.4.37:3000';
-    const jwtSecret = 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr';
+    const jwtSecret = '90622eb052254ec9a1592d118d81b6c7';
     const fileUrl = `${baseUrl}${storagePath}`;
     const username = localStorage.getItem('loggedInAdminUsername');
 
@@ -5829,7 +5829,7 @@ async function openReviewDocument(id, cid, storagePath, title, contractsTableNam
     editorContainer.style.display = 'block';
 
     const baseUrl = 'http://192.168.4.37:3000';
-    const jwtSecret = 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr';
+    const jwtSecret = '90622eb052254ec9a1592d118d81b6c7';
     const fileUrl = `${baseUrl}${storagePath}`;
     const username = localStorage.getItem('loggedInAdminUsername');
 
@@ -6209,7 +6209,7 @@ async function openSignatureDocument(id, cid, storagePath, title, contractsTable
     editorContainer.style.display = 'block';
 
     const baseUrl = 'http://192.168.4.37:3000';
-    const jwtSecret = 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr';
+    const jwtSecret = '90622eb052254ec9a1592d118d81b6c7';
     const fileUrl = `${baseUrl}${storagePath}`;
     const callbackUrl = `${baseUrl}/sync-draft?tableName=${contractsTableName}&contractId=${cid}&contractTitle=${encodeURIComponent(title)}&orgcode=${storagePath.split('/')[1]}&username=${encodeURIComponent(localStorage.getItem('loggedInAdminUsername'))}`;
 
@@ -6939,7 +6939,7 @@ async function reviewContract(cid, contractsTableName) {
     editorContainer.style.display = 'block';
 
     const baseUrl = 'http://192.168.4.37:3000';
-    const jwtSecret = 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr';
+    const jwtSecret = '90622eb052254ec9a1592d118d81b6c7';
     const fileUrl = `${baseUrl}${contractData.storage_path}`;
     const username = localStorage.getItem('loggedInAdminUsername');
     const orgcode = (await supabaseClient.from('orgadmins').select('org_code').eq('organisation_name', localStorage.getItem('loggedInOrganisationName')).single()).data.org_code;
@@ -7023,7 +7023,7 @@ async function signContract(cid, contractsTableName) {
     editorContainer.style.display = 'block';
 
     const baseUrl = 'http://192.168.4.37:3000';
-    const jwtSecret = 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr';
+    const jwtSecret = '90622eb052254ec9a1592d118d81b6c7';
     const fileUrl = `${baseUrl}${contractData.storage_path}`;
     const username = localStorage.getItem('loggedInAdminUsername');
     const orgcode = (await supabaseClient.from('orgadmins').select('org_code').eq('organisation_name', localStorage.getItem('loggedInOrganisationName')).single()).data.org_code;
@@ -7272,7 +7272,7 @@ async function openCreateContractModal(orgName) {
     let storagePath = null;
     let fileUrl = null;
     const baseUrl = 'http://192.168.4.37:3000';
-    const jwtSecret = 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr';
+    const jwtSecret = '90622eb052254ec9a1592d118d81b6c7';
 
     if (templateType === 'template' && templateName) {
         const templateTableName = `${organisationName.replace(/\s+/g, '_')}_templates`; // Adjusted for acme_corp_templates
@@ -8426,7 +8426,7 @@ async function editCoDraft(cid, title) {
     editorContainer.style.display = 'block';
 
     const baseUrl = 'http://192.168.4.37:3000';
-    const jwtSecret = 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr';
+    const jwtSecret = '90622eb052254ec9a1592d118d81b6c7';
     const fileUrl = `${baseUrl}${codraftData.storage_path}`;
     const callbackUrl = `${baseUrl}/sync-draft?tableName=${organisationName.toLowerCase().replace(/[^a-z0-9_]/g, '_')}_contracts&contractId=${cid}&contractTitle=${encodeURIComponent(title)}&orgcode=${orgcode}&username=${encodeURIComponent(username)}`;
 
@@ -9056,7 +9056,7 @@ async function populateAllAccountsTable(organisationName, accountName) {
 
 async function openPDFPreview(storagePath, title) {
     const baseUrl = 'http://192.168.4.37:3000';
-    const jwtSecret = 'cgXqlssiSUBIw4imAhbQNRBWr41kaivr';
+    const jwtSecret = '90622eb052254ec9a1592d118d81b6c7';
     const fileUrl = `${baseUrl}${storagePath}`;
 
     const modalHtml = `
