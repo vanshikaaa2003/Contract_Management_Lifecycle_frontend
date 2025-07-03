@@ -1589,13 +1589,16 @@ async function getSignedUrl(bucketPath) {
             try {
                 const jwtSecret = '90622eb052254ec9a1592d118d81b6c7';
                 const baseUrl = 'http://192.168.4.37:3000';
-                let bucketPath;
+               let bucketPath;
+
 if (isNew && pendingTemplate?.storagePath) {
   bucketPath = pendingTemplate.storagePath.replace(/^\/?files\//, '');
+} else if (!isNew && currentEditingTemplate?.storagePath) {
+  bucketPath = currentEditingTemplate.storagePath.replace(/^\/?files\//, '');
 } else {
-  bucketPath = (currentEditingTemplate?.storagePath || pendingTemplate?.originalStoragePath)
-               .replace(/^\/?files\//, '');
+  throw new Error('No valid storagePath found to open the document.');
 }
+
 
 const fileUrl   = await getSignedUrl(bucketPath);
 const callbackUrl = `${BASE_BACKEND}/onlyoffice-callback`;
