@@ -1590,13 +1590,10 @@ async function getSignedUrl(bucketPath) {
                 const jwtSecret = '90622eb052254ec9a1592d118d81b6c7';
                 const baseUrl = 'http://192.168.4.37:3000';
                 let bucketPath;
-if (isNew && !pendingTemplate?.originalStoragePath) {
-  bucketPath = 'accordwise-files/common/test.docx';
-} else {
-  bucketPath = (pendingTemplate?.originalStoragePath || currentEditingTemplate.storagePath)
-               .replace(/^\/?files\//, '');
-}
-
+bucketPath = (
+  pendingTemplate?.storagePath ||
+  currentEditingTemplate?.storagePath
+).replace(/^\/?files\//, '');
 
 const fileUrl   = await getSignedUrl(bucketPath);
 const callbackUrl = `${BASE_BACKEND}/onlyoffice-callback`;
@@ -1857,29 +1854,17 @@ async function saveTemplateToDatabase(
     if (docInsErr) throw new Error(`Insert into documents table failed: ${docInsErr.message}`);
 
     /* 4 ─ Upload a *valid* blank DOCX so the file exists in Storage */
-    const sourcePath = 'common/test.docx';  // inside accordwise-files
-const destPath = relativeFilePath;      // e.g. org123/templates/abc.docx
+    const blankRes = await fetch(`${BASE_BACKEND}/blank.docx`);
+    if (!blankRes.ok) throw new Error('Could not retrieve blank.docx from backend');
 
-console.log(`Copying ${sourcePath} → ${destPath} in Supabase Storage`);
-const { data: fileData, error: downloadErr } = await supaSrv
-  .storage
-  .from(BUCKET)
-  .download(sourcePath);
+    const blankBlob = await blankRes.blob();                // proper DOCX package
+    const blankFile = new File([blankBlob], fileName, {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    });
 
-if (downloadErr) throw new Error(`Failed to download test.docx: ${downloadErr.message}`);
-
-const { error: uploadErr } = await supaSrv
-  .storage
-  .from(BUCKET)
-  .upload(destPath, fileData, {
-    upsert: true,
-    contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-  });
-
-if (uploadErr) throw new Error(`Failed to upload copied docx: ${uploadErr.message}`);
-
-console.log('✓ Seed test.docx copied to:', destPath);
-
+    console.log('Uploading initial blank DOCX to Storage:', relativeFilePath);
+    await uploadFile(blankFile, relativeFilePath);          // existing helper
+    console.log('✓ Placeholder file uploaded');
 
     console.log('✓ Template & folder rows saved:', templateStoragePath);
   } catch (err) {
