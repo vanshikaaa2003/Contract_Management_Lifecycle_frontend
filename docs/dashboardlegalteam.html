@@ -1781,16 +1781,18 @@ async function saveTemplateToDatabase(
     orgcode
   });
 
-  /* Helpers ──────────────────────────────────────────────────────────── */
-  const BUCKET      = 'accordwise-files';
-  const bucketPath  = (p) => `${BUCKET}/${p.replace(/^\/+/, '')}`; // prepend bucket
-  const relPath     = (p) => p.replace(`${BUCKET}/`, '');          // strip bucket
+  const BUCKET = 'accordwise-files';
+  const bucketPath = (p) => `${BUCKET}/${p.replace(/^\/+/, '')}`;
+  const relPath = (p) => p.replace(`${BUCKET}/`, '');
 
   try {
-    /* 1 ─ Ensure the two tables exist (same logic as before) */
+    // 1. Ensure templates table exists
     const { data: tplTableOk, error: tplChkErr } =
-      await supabaseClient.rpc('check_templates_table_exists', { p_table_name: templatesTableName });
-    if (tplChkErr) throw new Error(`Error checking templates table: ${tplChkErr.message}`);
+      await supabaseClient.rpc('check_templates_table_exists', {
+        p_table_name: templatesTableName
+      });
+    if (tplChkErr)
+      throw new Error(`Error checking templates table: ${tplChkErr.message}`);
 
     if (!tplTableOk) {
       const { error } = await supabaseClient.rpc('execute_templates_sql', {
@@ -1809,9 +1811,13 @@ async function saveTemplateToDatabase(
       if (error) throw new Error(`Failed to create templates table: ${error.message}`);
     }
 
+    // 2. Ensure documents table exists
     const { data: docsTableOk, error: docsChkErr } =
-      await supabaseClient.rpc('check_templates_table_exists', { p_table_name: documentsTableName });
-    if (docsChkErr) throw new Error(`Error checking documents table: ${docsChkErr.message}`);
+      await supabaseClient.rpc('check_templates_table_exists', {
+        p_table_name: documentsTableName
+      });
+    if (docsChkErr)
+      throw new Error(`Error checking documents table: ${docsChkErr.message}`);
 
     if (!docsTableOk) {
       const { error } = await supabaseClient.rpc('execute_templates_sql', {
@@ -1830,58 +1836,51 @@ async function saveTemplateToDatabase(
       if (error) throw new Error(`Failed to create documents table: ${error.message}`);
     }
 
-    /* 2 ─ Build bucket paths */
-    const fileName            = `${templateId}_${templateName}_${version}.docx`;
-    const relativeFilePath    = `${orgcode}/templates/${fileName}`; // path *inside* bucket
-    const templateStoragePath = bucketPath(relativeFilePath);       // full accordwise-files/…
-    const folderStoragePath   = bucketPath(`${orgcode}/templates`);
+    // 3. Compute storage paths
+    const fileName = `${templateId}_${templateName}_${version}.docx`;
+    const relativeFilePath = `${orgcode}/templates/${fileName}`;
+    const templateStoragePath = bucketPath(relativeFilePath);
+    const folderStoragePath = bucketPath(`${orgcode}/templates`);
 
-    /* 3 ─ Insert metadata rows */
+    // 4. Insert metadata rows
     const { error: tplInsErr } = await supabaseClient.from(templatesTableName).insert({
-      template_id:     templateId,
-      template_name:   templateName,
+      template_id: templateId,
+      template_name: templateName,
       version,
       last_updated_on: new Date().toISOString(),
-      status:          'draft',
-      status_del:      1,
-      storage_path:    templateStoragePath
+      status: 'draft',
+      status_del: 1,
+      storage_path: templateStoragePath
     });
-    if (tplInsErr) throw new Error(`Insert into templates table failed: ${tplInsErr.message}`);
+    if (tplInsErr)
+      throw new Error(`Insert into templates table failed: ${tplInsErr.message}`);
 
     const { error: docInsErr } = await supabaseClient.from(documentsTableName).insert({
       document_name: `${orgcode}_templates`,
       document_type: 'folder',
-      storage_path:  folderStoragePath,
-      metadata:      JSON.stringify({ description: 'Folder for templates' }),
-      created_by:    createdBy
+      storage_path: folderStoragePath,
+      metadata: JSON.stringify({ description: 'Folder for templates' }),
+      created_by: createdBy
     });
-    if (docInsErr) throw new Error(`Insert into documents table failed: ${docInsErr.message}`);
+    if (docInsErr)
+      throw new Error(`Insert into documents table failed: ${docInsErr.message}`);
 
-    /* 4 ─ Upload a *valid* blank DOCX so the file exists in Storage */
-    const sourcePath = 'common/test.docx';  // inside accordwise-files
-const destPath = relativeFilePath;      // e.g. org123/templates/abc.docx
+    // 5. Call backend to copy seed test.docx
+    const response = await fetch(`${BASE_BACKEND}/copy-template-doc`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sourcePath: 'common/test.docx',
+        destinationPath: relativeFilePath
+      })
+    });
 
-console.log(`Copying ${sourcePath} → ${destPath} in Supabase Storage`);
-const { data: fileData, error: downloadErr } = await supaSrv
-  .storage
-  .from(BUCKET)
-  .download(sourcePath);
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(`File copy failed: ${result.error}`);
+    }
 
-if (downloadErr) throw new Error(`Failed to download test.docx: ${downloadErr.message}`);
-
-const { error: uploadErr } = await supaSrv
-  .storage
-  .from(BUCKET)
-  .upload(destPath, fileData, {
-    upsert: true,
-    contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-  });
-
-if (uploadErr) throw new Error(`Failed to upload copied docx: ${uploadErr.message}`);
-
-console.log('✓ Seed test.docx copied to:', destPath);
-
-
+    console.log('✓ Seed test.docx copied to:', result.destinationPath);
     console.log('✓ Template & folder rows saved:', templateStoragePath);
   } catch (err) {
     console.error('Error in saveTemplateToDatabase:', err);
