@@ -1590,12 +1590,13 @@ async function getSignedUrl(bucketPath) {
                 const jwtSecret = '90622eb052254ec9a1592d118d81b6c7';
                 const baseUrl = 'http://192.168.4.37:3000';
                 let bucketPath;
-if (isNew && !pendingTemplate?.originalStoragePath) {
-  bucketPath = 'accordwise-files/common/test.docx';   // a seed doc in Storage
+if (isNew && pendingTemplate?.storagePath) {
+  bucketPath = pendingTemplate.storagePath.replace(/^\/?files\//, '');
 } else {
-  bucketPath = (pendingTemplate?.originalStoragePath || currentEditingTemplate.storagePath)
-               .replace(/^\/?files\//, '');           // strip any legacy prefix
+  bucketPath = (currentEditingTemplate?.storagePath || pendingTemplate?.originalStoragePath)
+               .replace(/^\/?files\//, '');
 }
+
 const fileUrl   = await getSignedUrl(bucketPath);
 const callbackUrl = `${BASE_BACKEND}/onlyoffice-callback`;
 
@@ -1779,9 +1780,9 @@ async function saveTemplateToDatabase(
   });
 
   /* Helpers ──────────────────────────────────────────────────────────── */
-  const BUCKET      = 'accordwise-files';
-  const bucketPath  = (p) => `${BUCKET}/${p.replace(/^\/+/, '')}`; // prepend bucket
-  const relPath     = (p) => p.replace(`${BUCKET}/`, '');          // strip bucket
+  const BUCKET     = 'accordwise-files';
+  const bucketPath = (p) => `${BUCKET}/${p.replace(/^\/+/, '')}`; // prepend bucket
+  const relPath    = (p) => p.replace(`${BUCKET}/`, '');          // strip bucket
 
   try {
     /* 1 ─ Ensure the two tables exist (same logic as before) */
@@ -1854,20 +1855,9 @@ async function saveTemplateToDatabase(
     });
     if (docInsErr) throw new Error(`Insert into documents table failed: ${docInsErr.message}`);
 
-    /* 4 ─ Upload a *valid* blank DOCX so the file exists in Storage */
-    const blankRes = await fetch(`${BASE_BACKEND}/blank.docx`);
-    if (!blankRes.ok) throw new Error('Could not retrieve blank.docx from backend');
+    console.log('✓ Template & folder rows saved with storage path:', templateStoragePath);
 
-    const blankBlob = await blankRes.blob();                // proper DOCX package
-    const blankFile = new File([blankBlob], fileName, {
-      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    });
-
-    console.log('Uploading initial blank DOCX to Storage:', relativeFilePath);
-    await uploadFile(blankFile, relativeFilePath);          // existing helper
-    console.log('✓ Placeholder file uploaded');
-
-    console.log('✓ Template & folder rows saved:', templateStoragePath);
+    // 🔁 No need to upload blank.docx here. Actual content will be saved after editing via callback.
   } catch (err) {
     console.error('Error in saveTemplateToDatabase:', err);
     alert(`Error: ${err.message}`);
