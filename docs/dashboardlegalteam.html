@@ -1854,17 +1854,29 @@ async function saveTemplateToDatabase(
     if (docInsErr) throw new Error(`Insert into documents table failed: ${docInsErr.message}`);
 
     /* 4 ─ Upload a *valid* blank DOCX so the file exists in Storage */
-    const blankRes = await fetch(`${BASE_BACKEND}/blank.docx`);
-    if (!blankRes.ok) throw new Error('Could not retrieve blank.docx from backend');
+    const sourcePath = 'common/test.docx';  // inside accordwise-files
+const destPath = relativeFilePath;      // e.g. org123/templates/abc.docx
 
-    const blankBlob = await blankRes.blob();                // proper DOCX package
-    const blankFile = new File([blankBlob], fileName, {
-      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    });
+console.log(`Copying ${sourcePath} → ${destPath} in Supabase Storage`);
+const { data: fileData, error: downloadErr } = await supaSrv
+  .storage
+  .from(BUCKET)
+  .download(sourcePath);
 
-    console.log('Uploading initial blank DOCX to Storage:', relativeFilePath);
-    await uploadFile(blankFile, relativeFilePath);          // existing helper
-    console.log('✓ Placeholder file uploaded');
+if (downloadErr) throw new Error(`Failed to download test.docx: ${downloadErr.message}`);
+
+const { error: uploadErr } = await supaSrv
+  .storage
+  .from(BUCKET)
+  .upload(destPath, fileData, {
+    upsert: true,
+    contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  });
+
+if (uploadErr) throw new Error(`Failed to upload copied docx: ${uploadErr.message}`);
+
+console.log('✓ Seed test.docx copied to:', destPath);
+
 
     console.log('✓ Template & folder rows saved:', templateStoragePath);
   } catch (err) {
