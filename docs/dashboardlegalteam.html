@@ -1590,10 +1590,13 @@ async function getSignedUrl(bucketPath) {
                 const jwtSecret = '90622eb052254ec9a1592d118d81b6c7';
                 const baseUrl = 'http://192.168.4.37:3000';
                 let bucketPath;
-bucketPath = (
-  pendingTemplate?.storagePath ||
-  currentEditingTemplate?.storagePath
-).replace(/^\/?files\//, '');
+if (isNew && !pendingTemplate?.originalStoragePath) {
+  bucketPath = 'accordwise-files/common/test.docx';
+} else {
+  bucketPath = (pendingTemplate?.originalStoragePath || currentEditingTemplate.storagePath)
+               .replace(/^\/?files\//, '');
+}
+
 
 const fileUrl   = await getSignedUrl(bucketPath);
 const callbackUrl = `${BASE_BACKEND}/onlyoffice-callback`;
