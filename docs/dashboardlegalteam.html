@@ -1756,6 +1756,9 @@ const callbackUrl = `${BASE_BACKEND}/onlyoffice-callback`;
 // -----------------------------------------------------------------------------
 // saveTemplateToDatabase
 // -----------------------------------------------------------------------------
+//  ──────────────────────────────────────────────────────────────────────────
+//  saveTemplateToDatabase  ⟨updated 2025‑07‑03⟩
+//  ──────────────────────────────────────────────────────────────────────────
 async function saveTemplateToDatabase(
   templateId,
   templateName,
@@ -1775,113 +1778,102 @@ async function saveTemplateToDatabase(
     orgcode
   });
 
-  /* Helper ─────────────────────────────────────────────────────────────── */
-  const BUCKET = 'accordwise-files';
-  const bucketPath = (p) => `${BUCKET}/${p.replace(/^\/+/, '')}`;   // prepend bucket
-  const relPath    = (p) => p.replace(`${BUCKET}/`, '');            // strip bucket
+  /* Helpers ──────────────────────────────────────────────────────────── */
+  const BUCKET      = 'accordwise-files';
+  const bucketPath  = (p) => `${BUCKET}/${p.replace(/^\/+/, '')}`; // prepend bucket
+  const relPath     = (p) => p.replace(`${BUCKET}/`, '');          // strip bucket
 
   try {
-    /* ── 1. Ensure tables exist (unchanged) ───────────────────────────── */
-    const { data: templatesTableExists, error: templatesCheckErr } =
-      await supabaseClient.rpc('check_templates_table_exists', {
-        p_table_name: templatesTableName
-      });
-    if (templatesCheckErr)
-      throw new Error(`Error checking templates table: ${templatesCheckErr.message}`);
+    /* 1 ─ Ensure the two tables exist (same logic as before) */
+    const { data: tplTableOk, error: tplChkErr } =
+      await supabaseClient.rpc('check_templates_table_exists', { p_table_name: templatesTableName });
+    if (tplChkErr) throw new Error(`Error checking templates table: ${tplChkErr.message}`);
 
-    if (!templatesTableExists) {
+    if (!tplTableOk) {
       const { error } = await supabaseClient.rpc('execute_templates_sql', {
         sql_statement: `
-            CREATE TABLE ${templatesTableName} (
-              id SERIAL PRIMARY KEY,
-              template_id     TEXT NOT NULL,
-              template_name   TEXT NOT NULL,
-              version         TEXT NOT NULL,
-              last_updated_on TIMESTAMP DEFAULT NOW(),
-              status          TEXT DEFAULT 'draft',
-              status_del      INTEGER DEFAULT 1,
-              storage_path    TEXT
-            );`
+          CREATE TABLE ${templatesTableName} (
+            id SERIAL PRIMARY KEY,
+            template_id     TEXT NOT NULL,
+            template_name   TEXT NOT NULL,
+            version         TEXT NOT NULL,
+            last_updated_on TIMESTAMP DEFAULT NOW(),
+            status          TEXT DEFAULT 'draft',
+            status_del      INTEGER DEFAULT 1,
+            storage_path    TEXT
+          );`
       });
       if (error) throw new Error(`Failed to create templates table: ${error.message}`);
     }
 
-    const { data: docsTableExists, error: docsCheckErr } =
-      await supabaseClient.rpc('check_templates_table_exists', {
-        p_table_name: documentsTableName
-      });
-    if (docsCheckErr)
-      throw new Error(`Error checking documents table: ${docsCheckErr.message}`);
+    const { data: docsTableOk, error: docsChkErr } =
+      await supabaseClient.rpc('check_templates_table_exists', { p_table_name: documentsTableName });
+    if (docsChkErr) throw new Error(`Error checking documents table: ${docsChkErr.message}`);
 
-    if (!docsTableExists) {
+    if (!docsTableOk) {
       const { error } = await supabaseClient.rpc('execute_templates_sql', {
         sql_statement: `
-            CREATE TABLE ${documentsTableName} (
-              id SERIAL PRIMARY KEY,
-              document_name VARCHAR(255) NOT NULL,
-              document_type VARCHAR(100),
-              storage_path  TEXT,
-              created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-              updated_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-              metadata      JSONB,
-              created_by    VARCHAR(255)
-            );`
+          CREATE TABLE ${documentsTableName} (
+            id SERIAL PRIMARY KEY,
+            document_name VARCHAR(255) NOT NULL,
+            document_type VARCHAR(100),
+            storage_path  TEXT,
+            created_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            metadata      JSONB,
+            created_by    VARCHAR(255)
+          );`
       });
       if (error) throw new Error(`Failed to create documents table: ${error.message}`);
     }
 
-    /* ── 2. Build bucket paths ────────────────────────────────────────── */
+    /* 2 ─ Build bucket paths */
     const fileName            = `${templateId}_${templateName}_${version}.docx`;
-    const relativeFilePath    = `${orgcode}/templates/${fileName}`;   // path *inside* bucket
-    const templateStoragePath = bucketPath(relativeFilePath);         // full "accordwise-files/…"
+    const relativeFilePath    = `${orgcode}/templates/${fileName}`; // path *inside* bucket
+    const templateStoragePath = bucketPath(relativeFilePath);       // full accordwise-files/…
     const folderStoragePath   = bucketPath(`${orgcode}/templates`);
 
-    /* ── 3. Insert metadata rows ──────────────────────────────────────── */
-    const { error: insertTemplateErr } = await supabaseClient
-      .from(templatesTableName)
-      .insert({
-        template_id:   templateId,
-        template_name: templateName,
-        version,
-        last_updated_on: new Date().toISOString(),
-        status:        'draft',
-        status_del:    1,
-        storage_path:  templateStoragePath
-      });
-    if (insertTemplateErr)
-      throw new Error(`Insert into templates table failed: ${insertTemplateErr.message}`);
+    /* 3 ─ Insert metadata rows */
+    const { error: tplInsErr } = await supabaseClient.from(templatesTableName).insert({
+      template_id:     templateId,
+      template_name:   templateName,
+      version,
+      last_updated_on: new Date().toISOString(),
+      status:          'draft',
+      status_del:      1,
+      storage_path:    templateStoragePath
+    });
+    if (tplInsErr) throw new Error(`Insert into templates table failed: ${tplInsErr.message}`);
 
-    const { error: insertDocsErr } = await supabaseClient
-      .from(documentsTableName)
-      .insert({
-        document_name: `${orgcode}_templates`,
-        document_type: 'folder',
-        storage_path:  folderStoragePath,
-        metadata:      JSON.stringify({ description: 'Folder for templates' }),
-        created_by:    createdBy
-      });
-    if (insertDocsErr)
-      throw new Error(`Insert into documents table failed: ${insertDocsErr.message}`);
+    const { error: docInsErr } = await supabaseClient.from(documentsTableName).insert({
+      document_name: `${orgcode}_templates`,
+      document_type: 'folder',
+      storage_path:  folderStoragePath,
+      metadata:      JSON.stringify({ description: 'Folder for templates' }),
+      created_by:    createdBy
+    });
+    if (docInsErr) throw new Error(`Insert into documents table failed: ${docInsErr.message}`);
 
-    /* ── 4. Upload a placeholder .docx so the file exists in Storage ─── */
-    const blankBlob = new Blob(
-      [' '], // tiny placeholder content
-      { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' }
-    );
+    /* 4 ─ Upload a *valid* blank DOCX so the file exists in Storage */
+    const blankRes = await fetch(`${BASE_BACKEND}/blank.docx`);
+    if (!blankRes.ok) throw new Error('Could not retrieve blank.docx from backend');
+
+    const blankBlob = await blankRes.blob();                // proper DOCX package
     const blankFile = new File([blankBlob], fileName, {
       type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     });
 
-    console.log('Uploading placeholder DOCX to Storage:', relativeFilePath);
-    await uploadFile(blankFile, relativeFilePath);   // uses existing helper
-    console.log('Placeholder file uploaded ✔');
+    console.log('Uploading initial blank DOCX to Storage:', relativeFilePath);
+    await uploadFile(blankFile, relativeFilePath);          // existing helper
+    console.log('✓ Placeholder file uploaded');
 
-    console.log('✓ Template & folder rows saved, file uploaded to:', templateStoragePath);
+    console.log('✓ Template & folder rows saved:', templateStoragePath);
   } catch (err) {
     console.error('Error in saveTemplateToDatabase:', err);
     alert(`Error: ${err.message}`);
   }
 }
+
 
 
 
