@@ -1589,17 +1589,13 @@ async function getSignedUrl(bucketPath) {
             try {
                 const jwtSecret = '90622eb052254ec9a1592d118d81b6c7';
                 const baseUrl = 'http://192.168.4.37:3000';
-               let bucketPath;
-
-if (isNew && pendingTemplate?.storagePath) {
-  bucketPath = pendingTemplate.storagePath.replace(/^\/?files\//, '');
-} else if (!isNew && currentEditingTemplate?.storagePath) {
-  bucketPath = currentEditingTemplate.storagePath.replace(/^\/?files\//, '');
+                let bucketPath;
+if (isNew && !pendingTemplate?.originalStoragePath) {
+  bucketPath = 'accordwise-files/common/test.docx';   // a seed doc in Storage
 } else {
-  throw new Error('No valid storagePath found to open the document.');
+  bucketPath = (pendingTemplate?.originalStoragePath || currentEditingTemplate.storagePath)
+               .replace(/^\/?files\//, '');           // strip any legacy prefix
 }
-
-
 const fileUrl   = await getSignedUrl(bucketPath);
 const callbackUrl = `${BASE_BACKEND}/onlyoffice-callback`;
 
@@ -1783,12 +1779,12 @@ async function saveTemplateToDatabase(
   });
 
   /* Helpers ──────────────────────────────────────────────────────────── */
-  const BUCKET     = 'accordwise-files';
-  const bucketPath = (p) => `${BUCKET}/${p.replace(/^\/+/, '')}`; // prepend bucket
-  const relPath    = (p) => p.replace(`${BUCKET}/`, '');          // strip bucket
+  const BUCKET      = 'accordwise-files';
+  const bucketPath  = (p) => `${BUCKET}/${p.replace(/^\/+/, '')}`; // prepend bucket
+  const relPath     = (p) => p.replace(`${BUCKET}/`, '');          // strip bucket
 
   try {
-    // ── 1. Ensure both tables exist ──
+    /* 1 ─ Ensure the two tables exist (same logic as before) */
     const { data: tplTableOk, error: tplChkErr } =
       await supabaseClient.rpc('check_templates_table_exists', { p_table_name: templatesTableName });
     if (tplChkErr) throw new Error(`Error checking templates table: ${tplChkErr.message}`);
@@ -1831,13 +1827,13 @@ async function saveTemplateToDatabase(
       if (error) throw new Error(`Failed to create documents table: ${error.message}`);
     }
 
-    // ── 2. Build bucket paths ──
+    /* 2 ─ Build bucket paths */
     const fileName            = `${templateId}_${templateName}_${version}.docx`;
-    const relativeFilePath    = `${orgcode}/templates/${fileName}`;
-    const templateStoragePath = bucketPath(relativeFilePath);
+    const relativeFilePath    = `${orgcode}/templates/${fileName}`; // path *inside* bucket
+    const templateStoragePath = bucketPath(relativeFilePath);       // full accordwise-files/…
     const folderStoragePath   = bucketPath(`${orgcode}/templates`);
 
-    // ── 3. Insert into templates table ──
+    /* 3 ─ Insert metadata rows */
     const { error: tplInsErr } = await supabaseClient.from(templatesTableName).insert({
       template_id:     templateId,
       template_name:   templateName,
@@ -1849,7 +1845,6 @@ async function saveTemplateToDatabase(
     });
     if (tplInsErr) throw new Error(`Insert into templates table failed: ${tplInsErr.message}`);
 
-    // ── 4. Insert folder metadata into documents table ──
     const { error: docInsErr } = await supabaseClient.from(documentsTableName).insert({
       document_name: `${orgcode}_templates`,
       document_type: 'folder',
@@ -1859,15 +1854,23 @@ async function saveTemplateToDatabase(
     });
     if (docInsErr) throw new Error(`Insert into documents table failed: ${docInsErr.message}`);
 
-    console.log('✓ Template & folder rows saved with storage path:', templateStoragePath);
+    /* 4 ─ Upload a *valid* blank DOCX so the file exists in Storage */
+    const blankRes = await fetch(`${BASE_BACKEND}/blank.docx`);
+    if (!blankRes.ok) throw new Error('Could not retrieve blank.docx from backend');
 
-    // ✅ Return full storage path so the caller can reuse it
-    return templateStoragePath;
+    const blankBlob = await blankRes.blob();                // proper DOCX package
+    const blankFile = new File([blankBlob], fileName, {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    });
 
+    console.log('Uploading initial blank DOCX to Storage:', relativeFilePath);
+    await uploadFile(blankFile, relativeFilePath);          // existing helper
+    console.log('✓ Placeholder file uploaded');
+
+    console.log('✓ Template & folder rows saved:', templateStoragePath);
   } catch (err) {
     console.error('Error in saveTemplateToDatabase:', err);
     alert(`Error: ${err.message}`);
-    return null; // fallback if error occurs
   }
 }
 
