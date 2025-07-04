@@ -1597,7 +1597,6 @@ async function getSignedUrl(bucketPath) {
 
   try {
     const jwtSecret = '90622eb052254ec9a1592d118d81b6c7';
-    const baseUrl = 'http://192.168.4.37:3000';
     let bucketPath;
     let fileUrl;
 
@@ -1610,11 +1609,11 @@ async function getSignedUrl(bucketPath) {
         console.log('Signed URL for test.docx:', fileUrl);
         if (!fileUrl) {
           console.log('No test.docx found, trying blank.docx');
-          fileUrl = `${baseUrl}/blank.docx`;
+          fileUrl = `${BASE_BACKEND}/blank.docx`; // Use BASE_BACKEND
         }
       } catch (err) {
         console.warn('Failed to get signed URL for test.docx, trying blank.docx:', err);
-        fileUrl = `${baseUrl}/blank.docx`;
+        fileUrl = `${BASE_BACKEND}/blank.docx`; // Use BASE_BACKEND
       }
     } else {
       bucketPath = (pendingTemplate?.originalStoragePath || currentEditingTemplate?.storagePath || '')
@@ -1625,12 +1624,12 @@ async function getSignedUrl(bucketPath) {
       }
     }
 
-    const callbackUrl = `${baseUrl}/onlyoffice-callback`;
+    const callbackUrl = `${BASE_BACKEND}/onlyoffice-callback`; // Use BASE_BACKEND
 
     console.log('Generated fileUrl:', fileUrl);
     console.log('Generated callbackUrl:', callbackUrl);
 
-    if (fileUrl && fileUrl !== `${baseUrl}/blank.docx`) {
+    if (fileUrl && fileUrl !== `${BASE_BACKEND}/blank.docx`) {
       const response = await fetch(fileUrl, { method: 'HEAD', headers: { 'Authorization': `Bearer ${jwt.sign({}, jwtSecret)}` } });
       console.log('File URL check response:', { status: response.status, ok: response.ok });
       if (!response.ok && !isNew) {
@@ -1662,7 +1661,12 @@ async function getSignedUrl(bucketPath) {
       events: {
         onReady: () => console.log('Editor is ready'),
         onError: (event) => console.error('Editor error:', event.data),
-        onDocumentStateChange: (event) => console.log('Document state changed:', event.data),
+        onDocumentStateChange: (event) => {
+          console.log('Document state changed:', event.data);
+          if (event.data && event.data.saved) {
+            console.log('Document saved in ONLYOFFICE');
+          }
+        },
         onRequestSaveAs: (event) => console.log('Save as requested:', event.data)
       },
       height: '100%',
@@ -1743,17 +1747,31 @@ async function getSignedUrl(bucketPath) {
 
       document.getElementById('editorSaveBtn').onclick = async () => {
         console.log('Save button clicked, isNew:', isNew);
-        if (createEditor) {
-          // Force save in ONLYOFFICE
-          try {
-            console.log('Triggering ONLYOFFICE forceSave');
-            await createEditor.serviceCommand('forceSave');
-            console.log('ONLYOFFICE forceSave triggered successfully');
-          } catch (err) {
-            console.error('Failed to trigger forceSave:', err);
-            alert('Failed to save document in ONLYOFFICE. Please save manually in the editor first.');
-          }
+        if (!createEditor) {
+          console.warn('Save button clicked but no editor available');
+          alert('Editor not available. Please try reopening the editor.');
+          return;
+        }
 
+        // Try to force save in ONLYOFFICE
+        let saveSuccess = false;
+        try {
+          console.log('Triggering ONLYOFFICE forceSave');
+          await createEditor.serviceCommand('forceSave');
+          console.log('ONLYOFFICE forceSave triggered successfully');
+          saveSuccess = true;
+        } catch (err) {
+          console.error('Failed to trigger forceSave:', err);
+          alert('Failed to save document in ONLYOFFICE. Please save manually (Ctrl+S or Save button in editor) and try again.');
+        }
+
+        // Wait briefly to allow callback to process
+        if (saveSuccess) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
+        // Proceed with database update
+        try {
           if (isNew && pendingTemplate) {
             const { templateId, templateName, version, templatesTableName, documentsTableName, createdBy, orgcode } = pendingTemplate;
             await saveTemplateToDatabase(templateId, templateName, version, templatesTableName, documentsTableName, createdBy, orgcode);
@@ -1761,16 +1779,18 @@ async function getSignedUrl(bucketPath) {
             const { templateId, tableName, storagePath } = currentEditingTemplate;
             await updateTemplateLastUpdated(templateId, tableName, storagePath);
           }
-          createEditor.destroyEditor();
-          editorContainer.style.display = 'none';
-          templatesContent.classList.remove('hidden');
-          fetchTemplates(tableName);
-          currentEditingTemplate = null;
-          pendingTemplate = null;
-          console.log('Editor closed and templates refreshed');
-        } else {
-          console.warn('Save button clicked but no editor available');
+        } catch (err) {
+          console.error('Failed to update database:', err);
+          alert('Failed to update database. Document may have been saved in storage. Please check and try again.');
         }
+
+        createEditor.destroyEditor();
+        editorContainer.style.display = 'none';
+        templatesContent.classList.remove('hidden');
+        fetchTemplates(tableName);
+        currentEditingTemplate = null;
+        pendingTemplate = null;
+        console.log('Editor closed and templates refreshed');
       };
     }
   } catch (error) {
