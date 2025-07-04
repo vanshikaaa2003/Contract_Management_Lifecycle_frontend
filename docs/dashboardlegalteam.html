@@ -1590,37 +1590,49 @@ async function getSignedUrl(bucketPath) {
     const jwtSecret = '90622eb052254ec9a1592d118d81b6c7';
     const baseUrl = 'http://192.168.4.37:3000';
     let bucketPath;
+    let fileUrl;
 
     if (isNew) {
       // For new templates, set the final storage path where the edited document will be saved
       const fileName = `${templateId}_${templateName}_${version}.docx`;
       bucketPath = `accordwise-files/${orgcode}/templates/${fileName}`;
+      // Use the default test.docx for initial content
+      const defaultPath = 'accordwise-files/common/test.docx';
+      try {
+        fileUrl = await getSignedUrl(defaultPath);
+      } catch (err) {
+        console.warn('Default test.docx not found, opening blank document:', err);
+        // If test.docx doesn't exist, set fileUrl to null or an empty string to open a blank document
+        fileUrl = '';
+      }
     } else {
       bucketPath = (pendingTemplate?.originalStoragePath || currentEditingTemplate?.storagePath || '')
         .replace(/^\/?files\//, '');
+      fileUrl = await getSignedUrl(bucketPath);
     }
 
-    const fileUrl = await getSignedUrl(bucketPath);
     const callbackUrl = `${baseUrl}/onlyoffice-callback`;
 
     console.log('Generated fileUrl:', fileUrl);
     console.log('Generated callbackUrl:', callbackUrl);
 
-    // Optional: validate the signed URL
-    fetch(fileUrl, { method: 'HEAD', headers: { 'Authorization': 'Bearer ' + jwt.sign({}, jwtSecret) } })
-      .then(response => {
-        console.log('File URL check response:', { status: response.status, ok: response.ok });
-        if (!response.ok && !isNew) {
-          throw new Error(`File URL ${fileUrl} is not accessible: ${response.status}`);
-        }
-      })
-      .catch(err => console.error('File URL pre-check failed:', err));
+    // Optional: validate the signed URL if it exists
+    if (fileUrl) {
+      fetch(fileUrl, { method: 'HEAD', headers: { 'Authorization': 'Bearer ' + jwt.sign({}, jwtSecret) } })
+        .then(response => {
+          console.log('File URL check response:', { status: response.status, ok: response.ok });
+          if (!response.ok && !isNew) {
+            throw new Error(`File URL ${fileUrl} is not accessible: ${response.status}`);
+          }
+        })
+        .catch(err => console.error('File URL pre-check failed:', err));
+    }
 
     const config = {
       document: {
         fileType: 'docx',
         title: `${templateName}_${version}.docx`,
-        url: fileUrl,
+        url: fileUrl || '', // Use empty string for blank document if fileUrl is not available
         key: `${templateId}_${Date.now()}`,
         permissions: {
           edit: !isReview,
@@ -1634,7 +1646,7 @@ async function getSignedUrl(bucketPath) {
         user: { id: 'user1', name: 'Test User' },
         lang: 'en',
         custom: {
-          storagePath: bucketPath  // The path where ONLYOFFICE will save the edited document
+          storagePath: bucketPath // The path where ONLYOFFICE will save the edited document
         }
       },
       events: {
