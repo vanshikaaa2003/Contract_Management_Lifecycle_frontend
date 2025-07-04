@@ -1578,180 +1578,175 @@ async function getSignedUrl(bucketPath) {
         }
 
         async function openOnlyOfficeEditor(templateId, templateName, version, tableName, orgcode, isNew = false, isReview = false) {
-            console.log('Opening ONLYOFFICE editor:', { templateId, templateName, version, tableName, orgcode, isNew, isReview });
-            const editorContainer = document.getElementById('fullScreenEditor');
-            const templatesContent = document.getElementById('templatesContent');
-            const editorButtons = document.getElementById('editorButtons');
+  console.log('Opening ONLYOFFICE editor:', { templateId, templateName, version, tableName, orgcode, isNew, isReview });
+  const editorContainer = document.getElementById('fullScreenEditor');
+  const templatesContent = document.getElementById('templatesContent');
+  const editorButtons = document.getElementById('editorButtons');
 
-            templatesContent.classList.add('hidden');
-            editorContainer.style.display = 'block';
+  templatesContent.classList.add('hidden');
+  editorContainer.style.display = 'block';
 
-            try {
-                const jwtSecret = '90622eb052254ec9a1592d118d81b6c7';
-                const baseUrl = 'http://192.168.4.37:3000';
-                let bucketPath;
-if (isNew && !pendingTemplate?.originalStoragePath) {
-  bucketPath = 'accordwise-files/common/test.docx';
-} else {
-  bucketPath = (pendingTemplate?.originalStoragePath || currentEditingTemplate.storagePath)
-               .replace(/^\/?files\//, '');
+  try {
+    const jwtSecret = '90622eb052254ec9a1592d118d81b6c7';
+    const baseUrl = 'http://192.168.4.37:3000';
+    let bucketPath;
+
+    if (isNew && !pendingTemplate?.originalStoragePath) {
+      bucketPath = 'accordwise-files/common/test.docx';
+    } else {
+      bucketPath = (pendingTemplate?.originalStoragePath || currentEditingTemplate?.storagePath || '')
+        .replace(/^\/?files\//, '');
+    }
+
+    const fileUrl = await getSignedUrl(bucketPath);
+    const callbackUrl = `${BASE_BACKEND}/onlyoffice-callback`;
+
+    console.log('Generated fileUrl:', fileUrl);
+    console.log('Generated callbackUrl:', callbackUrl);
+
+    // Optional: validate the signed URL
+    fetch(fileUrl, { method: 'HEAD', headers: { 'Authorization': 'Bearer ' + jwt.sign({}, jwtSecret) } })
+      .then(response => {
+        console.log('File URL check response:', { status: response.status, ok: response.ok });
+        if (!response.ok) {
+          throw new Error(`File URL ${fileUrl} is not accessible: ${response.status}`);
+        }
+      })
+      .catch(err => console.error('File URL pre-check failed:', err));
+
+    const config = {
+      document: {
+        fileType: 'docx',
+        title: `${templateName}_${version}.docx`,
+        url: fileUrl,
+        key: `${templateId}_${Date.now()}`,
+        permissions: {
+          edit: !isReview,
+          download: true
+        }
+      },
+      documentType: 'word',
+      editorConfig: {
+        mode: isReview ? 'view' : 'edit',
+        callbackUrl: callbackUrl,
+        user: { id: 'user1', name: 'Test User' },
+        lang: 'en',
+        custom: {
+          storagePath: bucketPath  // 👈 Needed so backend knows where to save edited file
+        }
+      },
+      events: {
+        onReady: () => console.log('Editor is ready'),
+        onError: (event) => console.error('Editor error:', event.data),
+        onDocumentStateChange: (event) => console.log('Document state changed:', event.data),
+        onRequestSaveAs: (event) => console.log('Save as requested:', event.data)
+      },
+      height: '100%',
+      width: '100%'
+    };
+
+    const token = jwt.sign(config, jwtSecret);
+    config.token = token;
+
+    console.log('Editor config:', JSON.stringify(config, null, 2));
+
+    if (typeof DocsAPI === 'undefined') throw new Error('DocsAPI is not defined');
+    if (createEditor) {
+      console.log('Destroying previous editor instance');
+      createEditor.destroyEditor();
+    }
+
+    createEditor = new DocsAPI.DocEditor('editorWrapper', config);
+    console.log('ONLYOFFICE editor initialized successfully');
+
+    const cancelBtn = document.getElementById('editorCancelBtn');
+    const saveBtn = document.getElementById('editorSaveBtn');
+
+    if (isReview) {
+      editorButtons.innerHTML = `
+        <button id="editorEditBtn" class="btn btn-primary">Edit</button>
+        <button id="editorPublishBtn" class="btn btn-success">Publish</button>
+        <button id="editorCancelBtn" class="btn btn-secondary">Cancel</button>
+      `;
+
+      document.getElementById('editorEditBtn').onclick = () => {
+        console.log('Edit button clicked in review mode');
+        if (createEditor) createEditor.destroyEditor();
+        openOnlyOfficeEditor(templateId, templateName, version, tableName, orgcode, false, false);
+      };
+
+      document.getElementById('editorPublishBtn').onclick = async () => {
+        console.log('Publish button clicked');
+        const publishModal = new bootstrap.Modal(document.getElementById('publishConfirmationModal'));
+        publishModal.show();
+
+        document.getElementById('confirmPublishBtn').onclick = async () => {
+          console.log('Confirm Publish clicked');
+          await publishTemplate(templateId, tableName, currentEditingTemplate.storagePath);
+          if (createEditor) createEditor.destroyEditor();
+          editorContainer.style.display = 'none';
+          templatesContent.classList.remove('hidden');
+          fetchTemplates(tableName);
+          currentEditingTemplate = null;
+          publishModal.hide();
+          console.log('Template published and editor closed');
+        };
+      };
+
+      document.getElementById('editorCancelBtn').onclick = () => {
+        console.log('Cancel button clicked in review mode');
+        if (createEditor) createEditor.destroyEditor();
+        editorContainer.style.display = 'none';
+        templatesContent.classList.remove('hidden');
+        currentEditingTemplate = null;
+        console.log('Editor closed without changes');
+      };
+    } else {
+      editorButtons.innerHTML = `
+        <button id="editorCancelBtn" class="btn btn-secondary">Cancel</button>
+        <button id="editorSaveBtn" class="btn btn-primary">Save</button>
+      `;
+
+      document.getElementById('editorCancelBtn').onclick = () => {
+        console.log('Cancel button clicked');
+        if (createEditor) createEditor.destroyEditor();
+        editorContainer.style.display = 'none';
+        templatesContent.classList.remove('hidden');
+        currentEditingTemplate = null;
+        pendingTemplate = null;
+        console.log('Editor closed without saving');
+      };
+
+      document.getElementById('editorSaveBtn').onclick = async () => {
+        console.log('Save button clicked, isNew:', isNew);
+        if (createEditor) {
+          if (isNew && pendingTemplate) {
+            const { templateId, templateName, version, templatesTableName, documentsTableName, createdBy, orgcode } = pendingTemplate;
+            await saveTemplateToDatabase(templateId, templateName, version, templatesTableName, documentsTableName, createdBy, orgcode);
+          } else if (!isNew && currentEditingTemplate) {
+            const { templateId, tableName, storagePath } = currentEditingTemplate;
+            await updateTemplateLastUpdated(templateId, tableName, storagePath);
+          }
+          createEditor.destroyEditor();
+          editorContainer.style.display = 'none';
+          templatesContent.classList.remove('hidden');
+          fetchTemplates(tableName);
+          currentEditingTemplate = null;
+          pendingTemplate = null;
+          console.log('Editor closed and templates refreshed');
+        } else {
+          console.warn('Save button clicked but no editor available');
+        }
+      };
+    }
+  } catch (error) {
+    console.error('Failed to initialize ONLYOFFICE editor:', error);
+    alert('Failed to open editor. Check console for details.');
+    editorContainer.style.display = 'none';
+    templatesContent.classList.remove('hidden');
+  }
 }
 
-
-
-const fileUrl   = await getSignedUrl(bucketPath);
-const callbackUrl = `${BASE_BACKEND}/onlyoffice-callback`;
-
-                console.log('Generated fileUrl:', fileUrl);
-                console.log('Generated callbackUrl:', callbackUrl);
-
-                fetch(fileUrl, { method: 'HEAD', headers: { 'Authorization': 'Bearer ' + jwt.sign({}, jwtSecret) } })
-                    .then(response => {
-                        console.log('File URL check response:', { status: response.status, ok: response.ok });
-                        if (!response.ok) {
-                            throw new Error(`File URL ${fileUrl} is not accessible: ${response.status}`);
-                        }
-                    })
-                    .catch(err => console.error('File URL pre-check failed:', err));
-
-                const config = {
-                    document: {
-                        fileType: 'docx',
-                        title: `${templateName}_${version}.docx`,
-                        url: fileUrl,
-                        key: `${templateId}_${Date.now()}`,
-                        permissions: { edit: !isReview, download: true }
-                    },
-                    documentType: 'word',
-                    editorConfig: {
-                        mode: isReview ? 'view' : 'edit',
-                        callbackUrl: callbackUrl,
-                        user: { id: 'user1', name: 'Test User' },
-                        lang: 'en'
-                    },
-                    events: {
-                        onReady: () => console.log('Editor is ready'),
-                        onError: (event) => console.error('Editor error:', event.data),
-                        onDocumentStateChange: (event) => console.log('Document state changed:', event.data),
-                        onRequestSaveAs: (event) => console.log('Save as requested:', event.data)
-                    },
-                    height: '100%',
-                    width: '100%'
-                };
-                const token = jwt.sign(config, jwtSecret);
-                config.token = token;
-                console.log('Editor config:', JSON.stringify(config, null, 2));
-
-                if (typeof DocsAPI === 'undefined') throw new Error('DocsAPI is not defined');
-                if (createEditor) {
-                    console.log('Destroying previous editor instance');
-                    createEditor.destroyEditor();
-                }
-
-                if (isReview) {
-                    editorButtons.innerHTML = `
-                        <button id="editorEditBtn" class="btn btn-primary">Edit</button>
-                        <button id="editorPublishBtn" class="btn btn-success">Publish</button>
-                        <button id="editorCancelBtn" class="btn btn-secondary">Cancel</button>
-                    `;
-                } else {
-                    editorButtons.innerHTML = `
-                        <button id="editorCancelBtn" class="btn btn-secondary">Cancel</button>
-                        <button id="editorSaveBtn" class="btn btn-primary">Save</button>
-                    `;
-                }
-
-                createEditor = new DocsAPI.DocEditor('editorWrapper', config);
-                console.log('ONLYOFFICE editor initialized successfully');
-
-                const cancelBtn = document.getElementById('editorCancelBtn');
-                if (isReview) {
-                    const editBtn = document.getElementById('editorEditBtn');
-                    const publishBtn = document.getElementById('editorPublishBtn');
-
-                    editBtn.onclick = () => {
-                        console.log('Edit button clicked in review mode');
-                        if (createEditor) {
-                            createEditor.destroyEditor();
-                        }
-                        openOnlyOfficeEditor(templateId, templateName, version, tableName, orgcode, false, false);
-                    };
-
-                    publishBtn.onclick = () => {
-                        console.log('Publish button clicked');
-                        const publishModal = new bootstrap.Modal(document.getElementById('publishConfirmationModal'));
-                        publishModal.show();
-
-                        const confirmPublishBtn = document.getElementById('confirmPublishBtn');
-                        confirmPublishBtn.onclick = async () => {
-                            console.log('Confirm Publish clicked');
-                            await publishTemplate(templateId, tableName, currentEditingTemplate.storagePath);
-                            if (createEditor) {
-                                createEditor.destroyEditor();
-                            }
-                            editorContainer.style.display = 'none';
-                            templatesContent.classList.remove('hidden');
-                            fetchTemplates(tableName);
-                            currentEditingTemplate = null;
-                            publishModal.hide();
-                            console.log('Template published and editor closed');
-                        };
-                    };
-
-                    cancelBtn.onclick = () => {
-                        console.log('Cancel button clicked in review mode');
-                        if (createEditor) {
-                            createEditor.destroyEditor();
-                        }
-                        editorContainer.style.display = 'none';
-                        templatesContent.classList.remove('hidden');
-                        currentEditingTemplate = null;
-                        console.log('Editor closed without changes');
-                    };
-                } else {
-                    const saveBtn = document.getElementById('editorSaveBtn');
-
-                    cancelBtn.onclick = () => {
-                        console.log('Cancel button clicked');
-                        if (createEditor) {
-                            createEditor.destroyEditor();
-                        }
-                        editorContainer.style.display = 'none';
-                        templatesContent.classList.remove('hidden');
-                        currentEditingTemplate = null;
-                        pendingTemplate = null;
-                        console.log('Editor closed without saving');
-                    };
-
-                    saveBtn.onclick = async () => {
-                        console.log('Save button clicked, isNew:', isNew, 'currentEditingTemplate:', currentEditingTemplate, 'pendingTemplate:', pendingTemplate);
-                        if (createEditor) {
-                            if (isNew && pendingTemplate) {
-                                const { templateId, templateName, version, templatesTableName, documentsTableName, createdBy, orgcode } = pendingTemplate;
-                                await saveTemplateToDatabase(templateId, templateName, version, templatesTableName, documentsTableName, createdBy, orgcode);
-                            } else if (!isNew && currentEditingTemplate) {
-                                const { templateId, tableName, storagePath } = currentEditingTemplate;
-                                await updateTemplateLastUpdated(templateId, tableName, storagePath);
-                            }
-                            createEditor.destroyEditor();
-                            editorContainer.style.display = 'none';
-                            templatesContent.classList.remove('hidden');
-                            fetchTemplates(tableName);
-                            currentEditingTemplate = null;
-                            pendingTemplate = null;
-                            console.log('Editor closed and templates refreshed');
-                        } else {
-                            console.warn('Save button clicked but no editor available');
-                        }
-                    };
-                }
-            } catch (error) {
-                console.error('Failed to initialize ONLYOFFICE editor:', error);
-                alert('Failed to open editor. Check console for details.');
-                editorContainer.style.display = 'none';
-                templatesContent.classList.remove('hidden');
-            }
-        }
 
         // ---------------------------------------------
 // REPLACE the whole old function with this one
@@ -1865,7 +1860,7 @@ async function saveTemplateToDatabase(
     if (docInsErr)
       throw new Error(`Insert into documents table failed: ${docInsErr.message}`);
 
-    // 5. Call backend to copy seed test.docx
+    // 5. Call backend to copy seed test.docx (initial content only — user will edit later)
     const response = await fetch(`${BASE_BACKEND}/copy-template-doc`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
