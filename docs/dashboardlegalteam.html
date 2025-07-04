@@ -1609,11 +1609,12 @@ async function getSignedUrl(bucketPath) {
         fileUrl = await getSignedUrl(defaultPath);
         console.log('Signed URL for test.docx:', fileUrl);
         if (!fileUrl) {
-          console.log('No test.docx found, opening blank document');
+          console.log('No test.docx found, trying blank.docx');
+          fileUrl = `${baseUrl}/blank.docx`;
         }
       } catch (err) {
-        console.warn('Failed to get signed URL for test.docx, opening blank document:', err);
-        fileUrl = '';
+        console.warn('Failed to get signed URL for test.docx, trying blank.docx:', err);
+        fileUrl = `${baseUrl}/blank.docx`;
       }
     } else {
       bucketPath = (pendingTemplate?.originalStoragePath || currentEditingTemplate?.storagePath || '')
@@ -1629,7 +1630,7 @@ async function getSignedUrl(bucketPath) {
     console.log('Generated fileUrl:', fileUrl);
     console.log('Generated callbackUrl:', callbackUrl);
 
-    if (fileUrl) {
+    if (fileUrl && fileUrl !== `${baseUrl}/blank.docx`) {
       const response = await fetch(fileUrl, { method: 'HEAD', headers: { 'Authorization': `Bearer ${jwt.sign({}, jwtSecret)}` } });
       console.log('File URL check response:', { status: response.status, ok: response.ok });
       if (!response.ok && !isNew) {
@@ -1641,7 +1642,7 @@ async function getSignedUrl(bucketPath) {
       document: {
         fileType: 'docx',
         title: `${templateName}_${version}.docx`,
-        url: fileUrl || '', // Empty string for blank document
+        url: fileUrl || '',
         key: `${templateId}_${Date.now()}`,
         permissions: {
           edit: !isReview,
@@ -1655,7 +1656,7 @@ async function getSignedUrl(bucketPath) {
         user: { id: 'user1', name: 'Test User' },
         lang: 'en',
         custom: {
-          storagePath: bucketPath // Where the edited document will be saved
+          storagePath: bucketPath
         }
       },
       events: {
@@ -1743,6 +1744,16 @@ async function getSignedUrl(bucketPath) {
       document.getElementById('editorSaveBtn').onclick = async () => {
         console.log('Save button clicked, isNew:', isNew);
         if (createEditor) {
+          // Force save in ONLYOFFICE
+          try {
+            console.log('Triggering ONLYOFFICE forceSave');
+            await createEditor.serviceCommand('forceSave');
+            console.log('ONLYOFFICE forceSave triggered successfully');
+          } catch (err) {
+            console.error('Failed to trigger forceSave:', err);
+            alert('Failed to save document in ONLYOFFICE. Please save manually in the editor first.');
+          }
+
           if (isNew && pendingTemplate) {
             const { templateId, templateName, version, templatesTableName, documentsTableName, createdBy, orgcode } = pendingTemplate;
             await saveTemplateToDatabase(templateId, templateName, version, templatesTableName, documentsTableName, createdBy, orgcode);
